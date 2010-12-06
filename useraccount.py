@@ -3,7 +3,7 @@
 
 from bitcoim.address import Address
 from bitcoin.controller import Controller
-from common import debug
+from logging import debug
 from db import SQL
 from xmpp.protocol import JID
 

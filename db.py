@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # vi: sts=4 et sw=4
 
-from common import debug
+from logging import debug
 from sqlite3 import connect, OperationalError
 
 class SQL(object):

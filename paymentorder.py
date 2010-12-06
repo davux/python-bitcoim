@@ -1,5 +1,5 @@
 from bitcoin.controller import Controller
-from common import debug
+from logging import debug
 from datetime import datetime
 from db import SQL
 from xmpp import JID

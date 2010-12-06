@@ -68,7 +68,12 @@ class PaymentOrder(object):
 
     def confirm(self):
         '''Actually send the bitcoins to the recipient. Check first if the
-           user has enough bitcoins to do the payment.'''
+           user has enough bitcoins to do the payment.
+           TODO: In future versions of Bitcoin, it'll be possible to use
+                 'sendfrom' instead of 'sendtoaddress'. This will remove the
+                 need to check/lock the account, and to compute
+                 user.getTotalSent using a DB query.
+        '''
         from useraccount import UserAccount
         user = UserAccount(JID(self.jid))
         if user.lockPayments():

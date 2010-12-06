@@ -2,6 +2,7 @@ from bitcoin.controller import Controller
 from common import debug
 from datetime import datetime
 from db import SQL
+from xmpp import JID
 import random
 
 class PaymentOrder(object):
@@ -66,13 +67,25 @@ class PaymentOrder(object):
         self.entryId = SQL().lastrowid
 
     def confirm(self):
-        '''Actually send the bitcoins to the recipient.'''
-        try:
-            self.code = Controller().sendtoaddress(self.address, self.amount, \
-                                                   self.comment)
-        except jsonrpc.proxy.JSONRPCException:
-            raise PaymentError, 'Could not make payment. Maybe you don\'t have enough bitcoins?'
-        debug("Payment made to by %s to %s (BTC %s). Comment: %s" % (self.jid, self.address, self.amount, self.comment))
+        '''Actually send the bitcoins to the recipient. Check first if the
+           user has enough bitcoins to do the payment.'''
+        from useraccount import UserAccount
+        user = UserAccount(JID(self.jid))
+        if user.lockPayments():
+            if user.getBalance() >= self.amount:
+                try:
+                    self.code = Controller().sendtoaddress(self.address, \
+                                  self.amount, self.comment)
+                except jsonrpc.proxy.JSONRPCException:
+                    raise PaymentError, 'Could not make payment (unknown reason).'
+                user.unlockPayments()
+            else:
+              user.unlockPayments()
+              raise NotEnoughBitcoinsError
+        else:
+            raise AccountLockedError
+        debug("Payment made to by %s to %s (BTC %s). Comment: %s" % \
+              (self.jid, self.address, self.amount, self.comment))
         self.date = datetime.now()
         self.paid = True
         req = 'update %s set %s=?, %s=?, %s=? where %s=?' % \
@@ -85,3 +98,9 @@ class PaymentNotFoundError(Exception):
 
 class PaymentError(Exception):
     '''The payment could not be made'''
+
+class NotEnoughBitcoinsError(PaymentError):
+    '''The user doesn't have enough bitcoins on their account'''
+
+class AccountLockedError(PaymentError):
+    '''The user's account is locked. Can't do any payments'''

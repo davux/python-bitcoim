@@ -119,6 +119,13 @@ class UserAccount(object):
     def ownsAddress(self, address):
         return self.jid == address.account
 
+    def lockPayments(self):
+        '''Mark the account as locked for outgoing payments'''
+        return True #TODO: Actually implement the locking
+
+    def unlockPayments(self):
+        '''Remove the lock on outgoing payments'''
+        pass #TODO: Actually implement the unlocking
 
 class AlreadyRegisteredError(Exception):
     '''A JID is already registered at the gateway.'''

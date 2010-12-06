@@ -55,6 +55,8 @@ class Address(BCAddress):
                     suffix = ENCODING_SEP + suffix
                 self._jid = JID(node=self.address.lower() + suffix, domain=component['jid'])
             return self._jid
+        else:
+            return BCAddress.__getattr__(self, name)
 
     def getPercentageReceived(self):
         '''Returns the percentage of bitcoins received on this address over the total received

@@ -8,8 +8,8 @@ import random
 class PaymentOrder(object):
     '''A payment order.'''
 
-    def __init__(self, from_jid, address=None, amount=None, comment='', fee=0, code=None):
-        self.jid = from_jid
+    def __init__(self, sender, address=None, amount=None, comment='', fee=0, code=None):
+        self.sender = sender
         if code is None:
             self.address = address
             self.amount = amount
@@ -22,7 +22,7 @@ class PaymentOrder(object):
             debug("We want to fetch payment with code '%s'" % code)
             self.code = code
             condition = 'from_jid=? and confirmation_code=?'
-            values = [from_jid, code]
+            values = [sender.jid, code]
             if address is not None:
                 condition += ' and recipient=?'
                 values.append(address)
@@ -63,7 +63,7 @@ class PaymentOrder(object):
         self.date = datetime.now()
         req = 'insert into %s (%s, %s, %s, %s, %s, %s, %s) values (?, ?, ?, ?, ?, ?, ?)' % \
               ('payments', 'from_jid', 'date', 'recipient', 'amount', 'comment', 'confirmation_code', 'fee')
-        SQL().execute(req, (self.jid, self.date, self.address, self.amount, self.comment, self.code, self.fee))
+        SQL().execute(req, (self.sender.jid, self.date, self.address, self.amount, self.comment, self.code, self.fee))
         self.entryId = SQL().lastrowid
 
     def confirm(self):
@@ -72,25 +72,23 @@ class PaymentOrder(object):
            TODO: In future versions of Bitcoin, it'll be possible to use
                  'sendfrom' instead of 'sendtoaddress'. This will remove the
                  need to check/lock the account, and to compute
-                 user.getTotalSent using a DB query.
+                 sender.getTotalSent using a DB query.
         '''
-        from useraccount import UserAccount
-        user = UserAccount(JID(self.jid))
-        if user.lockPayments():
-            if user.getBalance() >= self.amount:
+        if self.sender.lockPayments():
+            if self.sender.getBalance() >= self.amount:
                 try:
                     self.code = Controller().sendtoaddress(self.address, \
                                   self.amount, self.comment)
                 except jsonrpc.proxy.JSONRPCException:
                     raise PaymentError, 'Could not make payment (unknown reason).'
-                user.unlockPayments()
+                self.sender.unlockPayments()
             else:
-              user.unlockPayments()
+              self.sender.unlockPayments()
               raise NotEnoughBitcoinsError
         else:
             raise AccountLockedError
         debug("Payment made to by %s to %s (BTC %s). Comment: %s" % \
-              (self.jid, self.address, self.amount, self.comment))
+              (self.sender, self.address, self.amount, self.comment))
         self.date = datetime.now()
         self.paid = True
         req = 'update %s set %s=?, %s=?, %s=? where %s=?' % \

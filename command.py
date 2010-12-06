@@ -71,7 +71,7 @@ class Command(object):
             raise CommandSyntaxError, 'The amount must be a number.'
         if amount <= 0:
             raise CommandSyntaxError, 'The amount must be positive.'
-        order = PaymentOrder(sender.jid, address, amount, comment)
+        order = PaymentOrder(sender, address, amount, comment)
         order.queue()
         reply = "You want to pay BTC %s to address %s" % (amount, order.address)
         if 0 != len(comment):
@@ -81,7 +81,7 @@ class Command(object):
 
     def _executeConfirm(self, user, code):
         try:
-            payment = PaymentOrder(user.jid, code=code)
+            payment = PaymentOrder(user, code=code)
         except PaymentNotFoundError:
             raise CommandError, 'No payment was found with code \'%s\'' % code
         try:

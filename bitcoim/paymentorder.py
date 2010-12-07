@@ -98,6 +98,7 @@ class PaymentOrder(object):
               (self.sender, self.address, self.amount, self.comment))
         self.date = datetime.now()
         self.paid = True
+        debug("About to update (as paid) payment #%s" % self.entryId)
         req = 'update %s set %s=?, %s=?, %s=? where %s=?' % \
               ('payments', 'paid', 'date', 'confirmation_code', 'id')
         SQL().execute(req, (self.paid, self.date, self.code, self.entryId))

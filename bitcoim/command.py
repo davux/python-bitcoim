@@ -6,6 +6,8 @@ COMMAND_HELP = 'help'
 COMMAND_PAY = 'pay'
 COMMAND_CONFIRM = 'confirm'
 
+WARNING_LIMIT = 10
+
 def parse(line):
     '''Parse a command line and return a tuple (action, arguments), where
        action is a word, and arguments is an array of words.
@@ -83,7 +85,9 @@ class Command(object):
         reply = "You want to pay BTC %s to address %s" % (amount, order.address)
         if 0 != len(comment):
             reply += ' (%s)' % comment
-        reply += ". Please confirm by typing: confirm %s" % order.code
+        reply += ". Please confirm by typing: 'confirm %s'." % order.code
+        if sender.getBalance() - amount < WARNING_LIMIT:
+            reply += " Note: you only have BTC %d left on your account right now." % sender.getBalance()
         return reply
 
     def _executeConfirm(self, user, code):

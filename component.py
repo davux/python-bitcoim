@@ -35,6 +35,7 @@ class Component:
              and from each of their "contacts" (bitcoin addresses)
         '''
         self.bye = False
+        Address.domain = jid
         self.cnx = XMPPComponent(jid, port, debug=['socket'])
         self.jid = jid
         self.connectedUsers = set()

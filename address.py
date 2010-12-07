@@ -1,4 +1,3 @@
-from conf import component
 from bitcoin.address import Address as BCAddress
 from paymentorder import PaymentOrder
 from xmpp.protocol import JID
@@ -11,6 +10,13 @@ class Address(BCAddress):
        a 'jid' attribute that represents is encoding as a JID. Reciprocally, it's possible
        to construct an address with a JID.
     '''
+
+    domain = None
+
+    def __new__(cls, address=None):
+        if cls.domain is None:
+            raise DomainNotConfiguredError
+        return BCAddress.__new__(cls, address)
 
     def __init__(self, address=None):
         '''Constructor. Initialize a bitcoin address normally.
@@ -53,7 +59,7 @@ class Address(BCAddress):
                     mask //= ENCODING_BASE
                 if ("" != suffix):
                     suffix = ENCODING_SEP + suffix
-                self._jid = JID(node=self.address.lower() + suffix, domain=component['jid'])
+                self._jid = JID(node=self.address.lower() + suffix, domain=Address.domain)
             return self._jid
         else:
             return BCAddress.__getattr__(self, name)
@@ -73,3 +79,6 @@ class Address(BCAddress):
 class CommandSyntaxError(Exception):
     '''There was a syntax in the command.'''
     pass
+
+class DomainNotConfiguredError(Exception):
+    '''The addresses' JID cannot be determined because no domain was configured.'''

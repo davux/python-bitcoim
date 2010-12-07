@@ -1,3 +1,4 @@
+from logging import debug, info
 from paymentorder import PaymentOrder, PaymentError, PaymentNotFoundError, \
                          NotEnoughBitcoinsError, AccountLockedError
 
@@ -42,6 +43,7 @@ class Command(object):
             raise UnknownCommandError
 
     def execute(self, user):
+        debug("A command was sent: %s" % self.action)
         if COMMAND_PAY == self.action:
             if self.target is None:
                 raise CommandTargetError
@@ -67,6 +69,7 @@ class Command(object):
             raise UnknownCommandError
 
     def _executePay(self, sender, amount, address, comment=''):
+        debug("Pay order (BTC %s to %s from %s, %s)" % (amount, address, sender, comment))
         try:
             amount = int(amount)
         except ValueError:
@@ -74,6 +77,8 @@ class Command(object):
         if amount <= 0:
             raise CommandSyntaxError, 'The amount must be positive.'
         order = PaymentOrder(sender, address, amount, comment)
+        info("Payment order valid, we'll queue it: %s -> %s (BTC %s, %s)" % \
+             (sender, address, amount, order.code))
         order.queue()
         reply = "You want to pay BTC %s to address %s" % (amount, order.address)
         if 0 != len(comment):
@@ -82,6 +87,7 @@ class Command(object):
         return reply
 
     def _executeConfirm(self, user, code):
+        debug("Confirmation attempt from %s (%s)" % (uesr, code))
         try:
             payment = PaymentOrder(user, code=code)
         except PaymentNotFoundError:
@@ -94,6 +100,8 @@ class Command(object):
             raise CommandError, 'Your account is locked by another ongoing payment. Please retry.'
         except PaymentError, message:
             raise CommandError, 'Can\'t confirm: %s' % message
+        info("BTC %s paid from %s to %s. Transaction ID: %s" % \
+              (payment.amount, user, payment.address, transactionId))
         reply = "Payment done. Transaction ID: %s" % transactionId
         return reply
 

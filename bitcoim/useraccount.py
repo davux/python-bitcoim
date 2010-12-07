@@ -3,7 +3,7 @@
 
 from bitcoim.address import Address
 from bitcoin.controller import Controller
-from logging import debug, error
+from logging import debug, info, error
 from db import SQL
 from xmpp.protocol import JID
 
@@ -56,18 +56,21 @@ class UserAccount(object):
         #TODO: Simply create an address for them
         if self.isRegistered():
             raise AlreadyRegisteredError
+        info("Inserting entry for user %s into database" % self.jid)
         req = "insert into %s (%s) values (?)" % (TABLE_REG, FIELD_JID)
         SQL().execute(req, (self.jid,))
 
     def unregister(self):
         '''Remove given JID from subscribers if it exists. Raise exception otherwise.'''
         #TODO: Simply delete or change the account information on the user's address(es)
+        debug("Deleting %s from registrations database" % self.jid)
         req = "delete from %s where %s=?" % (TABLE_REG, FIELD_JID)
         curs = SQL().execute(req, (self.jid,))
         if curs:
             count = curs.rowcount
             debug("%s rows deleted." % count)
             if 0 == count:
+                info("User wanted to get deleted but wasn't found")
                 raise AlreadyUnregisteredError
             elif 1 != count:
                 error("We deleted %s rows when unregistering %s. This is not normal." % (count, jid))
@@ -96,11 +99,14 @@ class UserAccount(object):
         total = SQL().fetchone()[0]
         if total is None:
             total = 0
+        debug("User %s has spent a total of BTC %s" % total)
         return total
 
     def getTotalReceived(self):
         '''Returns the total amount received on all addresses the user has control over.'''
-        return Controller().getreceivedbyaccount(self.jid)
+        total =  Controller().getreceivedbyaccount(self.jid)
+        debug("User %s has received a total of BTC %s" % total)
+        return total
 
     def getRoster(self):
         '''Return the set of all the address JIDs the user has in her/his roster.
@@ -125,6 +131,7 @@ class UserAccount(object):
     def createAddress(self):
         '''Create a new bitcoin address, associate it with the user, and return it'''
         address = Address()
+        info("Just created address %s. Associating it to user %s" % (address, self.jid))
         Controller().setaccount(address.address, self.jid)
         return address
 

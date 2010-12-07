@@ -8,7 +8,7 @@ from bitcoim.command import Command, parse as parseCommand, COMMAND_HELP, \
 
 from bitcoin.address import InvalidBitcoinAddressError
 from bitcoin.controller import Controller
-from logging import debug
+from logging import debug, info
 from useraccount import UserAccount, AlreadyRegisteredError
 from xmpp.client import Component as XMPPComponent
 from xmpp.protocol import JID, Message, Iq, Presence, Error, NodeProcessed, \
@@ -47,6 +47,7 @@ class Component:
         self.cnx.RegisterHandler(NS_PRESENCE, self.presenceReceived)
         self.cnx.RegisterHandler(NS_IQ, self.iqReceived)
         self.handleDisco(self.cnx)
+        debug("Sending initial presence to all contacts...")
         for jid in UserAccount.getAllContacts():
             self.cnx.send(Presence(to=jid, frm=self.jid, typ='probe'))
             user = UserAccount(JID(jid))
@@ -104,6 +105,7 @@ class Component:
     def addAddressToRoster(self, cnx, address, user):
         '''Add the JID corresponding to a given bitcoin address to user's
            roster. The suggested name is the bitcoin address.'''
+        debug("Adding address %s to %s's roster")
         msg = 'Hi! I\'m your new Bitcoin address'
         pres = Presence(typ='subscribe', status=msg, frm=address.jid, to=user.jid)
         nick = Node('nick')
@@ -116,6 +118,7 @@ class Component:
         '''Message received'''
         error = None
         user = UserAccount(msg.getFrom())
+        debug("Received message from %s" % user)
         if not user.isRegistered():
             error = "You're not registered. Please register, it's free!"
         else:
@@ -228,6 +231,7 @@ class Component:
                 if registered:
                     instructions.setData('There is no registration information to update. Simple as that.')
                 else:
+                    debug("A new user is preparing a registration")
                     instructions.setData('Register? If you do, you\'ll get a Bitcoin address that you can use to send and receive payments via Bitcoin.')
                 reply = iq.buildReply('result')
                 query = reply.getTag('query')
@@ -266,6 +270,7 @@ class Component:
                     children = iq.getQueryChildren()
                     if (0 != len(children)) and ('prompt' == children[0].getName()):
                         prompt = children[0].getData()
+                        debug("Someone wants to convert %s into a JID" % prompt)
                         try:
                             jid = Node('jid')
                             jid.setData(Address(prompt).jid)
@@ -285,6 +290,7 @@ class Component:
            user. This method first registers the resource. Then, if it's the
            user's first online resource: sends them a presence packet, and
            internally adds them to the list of online users.'''
+        debug("New resource (%s) for user %s" % (resource, user))
         user.resourceConnects(resource)
         if not user in self.connectedUsers:
             self.sendBitcoinPresence(self.cnx, user)
@@ -297,6 +303,7 @@ class Component:
            a user. This method first unregisters the resource. Then, if the
            user has no more online resource, sends them an "unavailable" presence,
            and internally removes them from the list of online users.'''
+        debug("Resource %s of user %s went offline" % (resource, user))
         user.resourceDisconnects(resource)
         if (user in self.connectedUsers) and (0 == len(user.resources)):
             jid = JID(user.jid)
@@ -309,7 +316,7 @@ class Component:
     def registrationRequested(self, cnx, iq):
         '''A registration request was received'''
         frm = iq.getFrom()
-        debug("Registration request from %s" % frm)
+        info("Registration request from %s" % frm)
         isUpdate = False
         user = UserAccount(frm)
         try:
@@ -317,6 +324,7 @@ class Component:
             new_address = user.createAddress()
             self.addAddressToRoster(cnx, new_address, user)
         except AlreadyRegisteredError:
+            info("(actually just an update)")
             isUpdate = True # This would be stupid, since there's no registration info to update
         cnx.send(Iq(typ='result', to=frm, frm=self.jid, attrs={'id': iq.getID()}))
         if not isUpdate:
@@ -325,6 +333,7 @@ class Component:
     def unregistrationRequested(self, cnx, iq):
         '''An unregistration request was received'''
         user = UserAccount(iq.getFrom())
+        info("Unegistration request from %s" % frm)
         try:
             user.unregister()
         except AlreadyUnregisteredError:

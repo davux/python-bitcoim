@@ -1,5 +1,5 @@
 from bitcoin.controller import Controller
-from logging import debug, info
+from logging import debug, info, warning
 from datetime import datetime
 from db import SQL
 from xmpp import JID
@@ -65,6 +65,7 @@ class PaymentOrder(object):
               ('payments', 'from_jid', 'date', 'recipient', 'amount', 'comment', 'confirmation_code', 'fee')
         SQL().execute(req, (self.sender.jid, self.date, self.address, self.amount, self.comment, self.code, self.fee))
         self.entryId = SQL().lastrowid
+        debug("Inserted a payment into database (id = %s)" % self.entryId)
 
     def confirm(self):
         '''Actually send the bitcoins to the recipient. Check first if the
@@ -75,17 +76,22 @@ class PaymentOrder(object):
                  sender.getTotalSent using a DB query.
         '''
         if self.sender.lockPayments():
+            debug("User %s is willing to send BTC %s to %s" % (self.sender, self.amount, self.address))
             if self.sender.getBalance() >= self.amount:
+                info("User %s is about to send BTC %s to %s" % (self.sender, self.amount, self.address))
                 try:
                     self.code = Controller().sendtoaddress(self.address, \
                                   self.amount, self.comment)
-                except jsonrpc.proxy.JSONRPCException:
+                except jsonrpc.proxy.JSONRPCException, inst:
+                    info("Couldn't do payment, for an unknown reason (%s)" % inst)
                     raise PaymentError, 'Could not make payment (unknown reason).'
                 self.sender.unlockPayments()
             else:
               self.sender.unlockPayments()
+              debug("Not enough money...")
               raise NotEnoughBitcoinsError
         else:
+            warning("User %s got an AccountLockedError on payment %s" % (self.sender, self.code))
             raise AccountLockedError
         info("Payment made by %s to %s (BTC %s). Comment: %s" % \
               (self.sender, self.address, self.amount, self.comment))

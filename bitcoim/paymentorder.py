@@ -2,6 +2,7 @@ from bitcoin.controller import Controller
 from logging import debug, info, warning
 from datetime import datetime
 from db import SQL
+from jsonrpc.proxy import JSONRPCException
 from xmpp import JID
 import random
 
@@ -82,7 +83,7 @@ class PaymentOrder(object):
                 try:
                     self.code = Controller().sendtoaddress(self.address, \
                                   self.amount, self.comment)
-                except jsonrpc.proxy.JSONRPCException, inst:
+                except JSONRPCException, inst:
                     info("Couldn't do payment, for an unknown reason (%s)" % inst)
                     raise PaymentError, 'Could not make payment (unknown reason).'
                 self.sender.unlockPayments()

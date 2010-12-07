@@ -16,7 +16,7 @@ class Address(BCAddress):
     def __new__(cls, address=None):
         if cls.domain is None:
             raise DomainNotConfiguredError
-        return BCAddress.__new__(cls, address)
+        return BCAddress.__new__(cls)
 
     def __init__(self, address=None):
         '''Constructor. Initialize a bitcoin address normally.

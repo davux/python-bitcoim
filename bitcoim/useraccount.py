@@ -3,7 +3,7 @@
 
 from bitcoim.address import Address
 from bitcoin.controller import Controller
-from logging import debug
+from logging import debug, error
 from db import SQL
 from xmpp.protocol import JID
 
@@ -70,7 +70,7 @@ class UserAccount(object):
             if 0 == count:
                 raise AlreadyUnregisteredError
             elif 1 != count:
-                debug("We deleted %s rows when unregistering %s. This is not normal." % (count, jid))
+                error("We deleted %s rows when unregistering %s. This is not normal." % (count, jid))
 
     def resourceConnects(self, resource):
         self.resources.add(resource)

@@ -1,5 +1,5 @@
 from bitcoin.controller import Controller
-from logging import debug
+from logging import debug, info
 from datetime import datetime
 from db import SQL
 from xmpp import JID
@@ -87,7 +87,7 @@ class PaymentOrder(object):
               raise NotEnoughBitcoinsError
         else:
             raise AccountLockedError
-        debug("Payment made to by %s to %s (BTC %s). Comment: %s" % \
+        info("Payment made by %s to %s (BTC %s). Comment: %s" % \
               (self.sender, self.address, self.amount, self.comment))
         self.date = datetime.now()
         self.paid = True

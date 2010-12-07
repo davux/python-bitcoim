@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # vi: sts=4 et sw=4
 
-from logging import debug
+from logging import info
 from sqlite3 import connect, OperationalError
 
 class SQL(object):
@@ -98,4 +98,4 @@ class Database(object):
             current_version += 1
             req = 'update meta set value=? where name=?'
             SQL(self.url).execute(req, (current_version, 'db_version'))
-            debug("Upgraded to DB version %s" % current_version)
+            info("Upgraded to DB version %s" % current_version)

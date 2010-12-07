@@ -26,7 +26,7 @@ APP_DESCRIPTION = 'Bitcoin payment orders via XMPP'
 class Component:
     '''The component itself.'''
 
-    def __init__(self, jid, password, server, port=5347, debug=[]):
+    def __init__(self, jid, password, server, port=5347, debuglevel=[]):
         '''Constructor.
            - Establish a session
            - Declare handlers
@@ -36,7 +36,7 @@ class Component:
         '''
         self.bye = False
         Address.domain = jid
-        self.cnx = XMPPComponent(jid, port, debug=debug)
+        self.cnx = XMPPComponent(jid, port, debug=debuglevel)
         self.jid = jid
         self.connectedUsers = set()
         if not self.cnx.connect([server, port]):

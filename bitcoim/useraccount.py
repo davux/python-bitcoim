@@ -99,13 +99,13 @@ class UserAccount(object):
         total = SQL().fetchone()[0]
         if total is None:
             total = 0
-        debug("User %s has spent a total of BTC %s" % total)
+        debug("User %s has spent a total of BTC %s" % (self.jid, total))
         return total
 
     def getTotalReceived(self):
         '''Returns the total amount received on all addresses the user has control over.'''
         total =  Controller().getreceivedbyaccount(self.jid)
-        debug("User %s has received a total of BTC %s" % total)
+        debug("User %s has received a total of BTC %s" % (self.jid, total))
         return total
 
     def getRoster(self):

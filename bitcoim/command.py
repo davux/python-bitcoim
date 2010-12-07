@@ -34,6 +34,8 @@ class Command(object):
     def usage(self):
         if COMMAND_PAY == self.action:
             return 'pay <amount> [<reason>]\n - <amount> must be a positive number\n - <reason> is a free-form text'
+        if COMMAND_CONFIRM == self.action:
+            return 'confirm <code>\n - <code> is the confirmation code of a pending payment'
         elif COMMAND_HELP == self.action:
             return 'help [<command>]'
         else:
@@ -100,7 +102,7 @@ class Command(object):
             if target is None:
                 reply = 'Possible commands: help. Type \'help <command>\' for details. You can also type a bitcoin address directly to start a chat.'
             else:
-                reply = 'Possible commands: pay, help. Type \'help <command>\' for details.'
+                reply = 'Possible commands: pay, confirm, help. Type \'help <command>\' for details.'
         else:
             try:
                 reply = "Usage: " + Command(command).usage()

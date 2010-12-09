@@ -29,6 +29,7 @@ class UserAccount(object):
             cls.cache[jid] = object.__new__(cls)
             cls.cache[jid].jid = jid
             cls.cache[jid].resources = set()
+            cls.cache[jid]._lastBalance = 0
         debug("Returning UserAccount(%s)" % jid)
         return cls.cache[jid]
 
@@ -113,6 +114,18 @@ class UserAccount(object):
     def getBalance(self):
         '''Return the user's current balance'''
         return Controller().getbalance(self.jid)
+
+    def checkBalance(self):
+        '''Return the user's current balance if it has changed since last
+           check, None otherwise.
+        '''
+        newBalance = self.getBalance()
+        if newBalance == self._lastBalance:
+            return None
+        else:
+            debug("%s's balance changed from %s to %s" % (self, self._lastBalance, newBalance))
+            self._lastBalance = newBalance
+            return newBalance
 
     def createAddress(self):
         '''Create a new bitcoin address, associate it with the user, and return it'''

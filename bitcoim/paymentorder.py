@@ -71,8 +71,6 @@ class PaymentOrder(object):
     def confirm(self):
         '''Actually send the bitcoins to the recipient. Check first if the
            user has enough bitcoins to do the payment.
-           TODO: When sender.getTotalSent doesn't use the DB anymore, we
-                 can get rid of the SQL UPDATE query.
         '''
         info("User %s is about to send BTC %s to %s" % (self.sender, self.amount, self.address))
         try:
@@ -85,10 +83,9 @@ class PaymentOrder(object):
               (self.sender, self.address, self.amount, self.comment))
         self.date = datetime.now()
         self.paid = True
-        debug("About to update (as paid) payment #%s" % self.entryId)
-        req = 'update %s set %s=?, %s=?, %s=? where %s=?' % \
-              ('payments', 'paid', 'date', 'confirmation_code', 'id')
-        SQL().execute(req, (self.paid, self.date, self.code, self.entryId))
+        debug("About to delete payment order #%s" % self.entryId)
+        req = 'delete from %s where %s=?' % ('payments', 'id')
+        SQL().execute(req, (self.entryId,))
         return self.code
 
 class PaymentNotFoundError(Exception):

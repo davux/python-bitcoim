@@ -91,7 +91,6 @@ class Database(object):
                          comment varchar(256) NOT NULL,
                          confirmation_code varchar(256) NOT NULL,
                          fee real NOT NULL,
-                         paid integer NOT NULL default 0,
                          PRIMARY KEY (id)
                          )'''
                 SQL(self.url).execute(req)

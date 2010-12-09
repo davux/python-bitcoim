@@ -17,7 +17,6 @@ class PaymentOrder(object):
             self.comment = comment
             self.fee = fee
             self.date = None
-            self.paid = False
             self.entryId = None
         else:
             debug("We want to fetch payment with code '%s'" % code)
@@ -36,9 +35,9 @@ class PaymentOrder(object):
             if fee != 0:
                 condition += ' and fee=?'
                 values.append(fee)
-            req = 'select %s, %s, %s, %s, %s, %s, %s from %s where %s' % \
+            req = 'select %s, %s, %s, %s, %s, %s from %s where %s' % \
                   ('id', 'date', 'recipient', 'amount', 'comment', 'fee', \
-                   'paid', 'payments', condition)
+                   'payments', condition)
             debug("SQL query: %s" % req)
             SQL().execute(req, tuple(values))
             paymentOrder = SQL().fetchone()
@@ -46,7 +45,7 @@ class PaymentOrder(object):
                 raise PaymentNotFoundError
             else:
                 (self.entryId, self.date, self.address, self.amount, \
-                 self.comment, self.fee, self.paid) = tuple(paymentOrder)
+                 self.comment, self.fee) = tuple(paymentOrder)
 
     @staticmethod
     def genConfirmationCode(length=4, alphabet='abcdefghjkmnpqrstuvwxyz23456789'):
@@ -82,7 +81,6 @@ class PaymentOrder(object):
         info("Payment made by %s to %s (BTC %s). Comment: %s" % \
               (self.sender, self.address, self.amount, self.comment))
         self.date = datetime.now()
-        self.paid = True
         debug("About to delete payment order #%s" % self.entryId)
         req = 'delete from %s where %s=?' % ('payments', 'id')
         SQL().execute(req, (self.entryId,))

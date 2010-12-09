@@ -163,6 +163,8 @@ class Component:
         if error is None:
             msg = msg.buildReply(reply)
             msg.setType('chat')
+            if user.checkBalance() is not None:
+                self.sendBitcoinPresence(self.cnx, user)
         else:
             msg = msg.buildReply("Error: %s" % error)
             msg.setType('error')

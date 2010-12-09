@@ -71,29 +71,16 @@ class PaymentOrder(object):
     def confirm(self):
         '''Actually send the bitcoins to the recipient. Check first if the
            user has enough bitcoins to do the payment.
-           TODO: In future versions of Bitcoin, it'll be possible to use
-                 'sendfrom' instead of 'sendtoaddress'. This will remove the
-                 need to check/lock the account, and to compute
-                 sender.getTotalSent using a DB query.
+           TODO: When sender.getTotalSent doesn't use the DB anymore, we
+                 can get rid of the SQL UPDATE query.
         '''
-        if self.sender.lockPayments():
-            debug("User %s is willing to send BTC %s to %s" % (self.sender, self.amount, self.address))
-            if self.sender.getBalance() >= self.amount:
-                info("User %s is about to send BTC %s to %s" % (self.sender, self.amount, self.address))
-                try:
-                    self.code = Controller().sendtoaddress(self.address, \
-                                  self.amount, self.comment)
-                except JSONRPCException, inst:
-                    info("Couldn't do payment, for an unknown reason (%s)" % inst)
-                    raise PaymentError, 'Could not make payment (unknown reason).'
-                self.sender.unlockPayments()
-            else:
-              self.sender.unlockPayments()
-              debug("Not enough money...")
-              raise NotEnoughBitcoinsError
-        else:
-            warning("User %s got an AccountLockedError on payment %s" % (self.sender, self.code))
-            raise AccountLockedError
+        info("User %s is about to send BTC %s to %s" % (self.sender, self.amount, self.address))
+        try:
+            self.code = Controller().sendfrom(self.sender.jid, self.address, \
+                          self.amount, 1, self.comment)
+        except JSONRPCException, inst:
+            info("Couldn't do payment, probably not enough bitcoins (%s)" % inst)
+            raise NotEnoughBitcoinsError
         info("Payment made by %s to %s (BTC %s). Comment: %s" % \
               (self.sender, self.address, self.amount, self.comment))
         self.date = datetime.now()
@@ -112,6 +99,3 @@ class PaymentError(Exception):
 
 class NotEnoughBitcoinsError(PaymentError):
     '''The user doesn't have enough bitcoins on their account'''
-
-class AccountLockedError(PaymentError):
-    '''The user's account is locked. Can't do any payments'''

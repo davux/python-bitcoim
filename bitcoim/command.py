@@ -1,6 +1,6 @@
 from logging import debug, info
 from paymentorder import PaymentOrder, PaymentError, PaymentNotFoundError, \
-                         NotEnoughBitcoinsError, AccountLockedError
+                         NotEnoughBitcoinsError
 
 COMMAND_HELP = 'help'
 COMMAND_PAY = 'pay'
@@ -100,8 +100,6 @@ class Command(object):
             transactionId = payment.confirm()
         except NotEnoughBitcoinsError:
             raise CommandError, 'You don\'t have enough bitcoins to do that payment.'
-        except AccountLockedError:
-            raise CommandError, 'Your account is locked by another ongoing payment. Please retry.'
         except PaymentError, message:
             raise CommandError, 'Can\'t confirm: %s' % message
         info("BTC %s paid from %s to %s. Transaction ID: %s" % \

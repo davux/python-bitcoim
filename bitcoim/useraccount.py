@@ -88,20 +88,6 @@ class UserAccount(object):
         '''Return the set of all addresses the user has control over'''
         return Controller().getaddressesbyaccount(self.jid)
 
-    def getTotalSent(self):
-        '''Returns the total amount that was sent using all addresses the
-           user has control over.
-           NOTE: Future versions of bitcoin will be able to track the bitcoins
-                 spent by a given account, but for now we need to do this work
-                 at application level.'''
-        req = 'select SUM(%s) from %s where %s=? and %s=?' % ('amount', 'payments', 'from_jid', 'paid')
-        SQL().execute(req, (self.jid, True))
-        total = SQL().fetchone()[0]
-        if total is None:
-            total = 0
-        debug("User %s has spent a total of BTC %s" % (self.jid, total))
-        return total
-
     def getTotalReceived(self):
         '''Returns the total amount received on all addresses the user has control over.'''
         total =  Controller().getreceivedbyaccount(self.jid)
@@ -126,7 +112,7 @@ class UserAccount(object):
 
     def getBalance(self):
         '''Return the user's current balance'''
-        return self.getTotalReceived() - self.getTotalSent()
+        return Controller().getbalance(self.jid)
 
     def createAddress(self):
         '''Create a new bitcoin address, associate it with the user, and return it'''

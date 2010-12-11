@@ -1,6 +1,6 @@
 from logging import debug, info
 from paymentorder import PaymentOrder, PaymentError, PaymentNotFoundError, \
-                         NotEnoughBitcoinsError
+                         NotEnoughBitcoinsError, PaymentToSelfError
 
 COMMAND_HELP = 'help'
 COMMAND_PAY = 'pay'
@@ -66,7 +66,7 @@ class Command(object):
                 targetCommand = self.arguments.pop(0)
             except IndexError:
                 targetCommand = None
-            return self._executeHelp(self.target, targetCommand)
+            return self._executeHelp(user, self.target, targetCommand)
         else:
             raise UnknownCommandError
 
@@ -78,7 +78,10 @@ class Command(object):
             raise CommandSyntaxError, 'The amount must be a number.'
         if amount <= 0:
             raise CommandSyntaxError, 'The amount must be positive.'
-        order = PaymentOrder(sender, address, amount, comment)
+        try:
+            order = PaymentOrder(sender, address, amount, comment)
+        except PaymentToSelfError:
+            raise CommandSyntaxError, 'You know, I\'m your own address. It doesn\'t make sense.'
         order.queue()
         info("Payment order valid, queued: %s -> %s (BTC %s, %s)" % \
              (sender, address, amount, order.code))
@@ -107,12 +110,14 @@ class Command(object):
         reply = "Payment done. Transaction ID: %s" % transactionId
         return reply
 
-    def _executeHelp(self, target, command=None):
+    def _executeHelp(self, user, target, command=None):
         if command is None:
+            possibleCommands = ['help']
+            if (target is not None) and (target.account != user.jid):
+                possibleCommands.extend(['pay', 'confirm'])
+            reply = 'Possible commands: %s. Type \'help <command>\' for details.' % ', '.join(possibleCommands)
             if target is None:
-                reply = 'Possible commands: help. Type \'help <command>\' for details. You can also type a bitcoin address directly to start a chat.'
-            else:
-                reply = 'Possible commands: pay, confirm, help. Type \'help <command>\' for details.'
+                reply += ' You can also type a bitcoin address directly to start a chat.'
         else:
             try:
                 reply = "Usage: " + Command(command).usage()

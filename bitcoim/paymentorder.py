@@ -13,6 +13,8 @@ class PaymentOrder(object):
     def __init__(self, sender, address=None, amount=None, comment='', fee=0, code=None):
         self.sender = sender
         if code is None:
+            if sender.jid == address.account:
+                raise PaymentToSelfError
             self.address = address
             self.amount = amount
             self.comment = comment
@@ -96,3 +98,6 @@ class PaymentError(Exception):
 
 class NotEnoughBitcoinsError(PaymentError):
     '''The user doesn't have enough bitcoins on their account'''
+
+class PaymentToSelfError(PaymentError):
+    '''The sender and the destination address represent the same account'''

@@ -28,7 +28,7 @@ class Command(object):
 
     def __init__(self, action, arguments=[], target=None):
         '''Constructor. action is the action to perform. arguments is an array
-           of words, target is either an address or None if it's the gateway
+           of words, target is either an Address or None if it's the gateway
            itself.'''
         self.action = action.lower()
         self.arguments = arguments

@@ -145,7 +145,7 @@ class Component:
                         error = reason
             else:
                 try:
-                    address = Address(msg.getTo()).address
+                    address = Address(msg.getTo())
                     (action, args) = parseCommand(msg.getBody())
                     reply = Command(action, args, address).execute(user)
                 except InvalidBitcoinAddressError:

@@ -1,3 +1,4 @@
+from bitcoin.address import Address
 from bitcoin.controller import Controller
 from logging import debug, info, warning
 from datetime import datetime
@@ -25,7 +26,7 @@ class PaymentOrder(object):
             values = [sender.jid, code]
             if address is not None:
                 condition += ' and recipient=?'
-                values.append(address)
+                values.append(address.address)
             if amount is not None:
                 condition += ' and amount=?'
                 values.append(amount)
@@ -46,6 +47,7 @@ class PaymentOrder(object):
             else:
                 (self.entryId, self.date, self.address, self.amount, \
                  self.comment, self.fee) = tuple(paymentOrder)
+                self.address = Address(self.address)
 
     @staticmethod
     def genConfirmationCode(length=4, alphabet='abcdefghjkmnpqrstuvwxyz23456789'):
@@ -63,7 +65,7 @@ class PaymentOrder(object):
         self.date = datetime.now()
         req = 'insert into %s (%s, %s, %s, %s, %s, %s, %s) values (?, ?, ?, ?, ?, ?, ?)' % \
               ('payments', 'from_jid', 'date', 'recipient', 'amount', 'comment', 'confirmation_code', 'fee')
-        SQL().execute(req, (self.sender.jid, self.date, self.address, self.amount, self.comment, self.code, self.fee))
+        SQL().execute(req, (self.sender.jid, self.date, self.address.address, self.amount, self.comment, self.code, self.fee))
         self.entryId = SQL().lastrowid
         debug("Inserted a payment into database (id = %s)" % self.entryId)
 
@@ -73,8 +75,8 @@ class PaymentOrder(object):
         '''
         info("User %s is about to send BTC %s to %s" % (self.sender, self.amount, self.address))
         try:
-            self.code = Controller().sendfrom(self.sender.jid, self.address, \
-                          self.amount, 1, self.comment)
+            self.code = Controller().sendfrom(self.sender.jid,
+                          self.address.address, self.amount, 1, self.comment)
         except JSONRPCException, inst:
             info("Couldn't do payment, probably not enough bitcoins (%s)" % inst)
             raise NotEnoughBitcoinsError

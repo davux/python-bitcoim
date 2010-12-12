@@ -201,10 +201,6 @@ class AlreadyRegisteredError(Exception):
     '''A JID is already registered at the gateway.'''
     pass
 
-class AlreadyUnregisteredError(Exception):
-    '''An unregisration was asked but the JID wasn't registered at the gateway.'''
-    pass
-
 class UsernameNotAvailableError(Exception):
     '''The requested username is already in use or is invalid.'''
 

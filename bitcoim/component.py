@@ -367,10 +367,10 @@ class Component:
     def unregistrationRequested(self, cnx, iq):
         '''An unregistration request was received'''
         user = UserAccount(iq.getFrom())
-        info("Unegistration request from %s" % frm)
+        info("Unegistration request from %s" % user)
         try:
             user.unregister()
-        except AlreadyUnregisteredError:
+        except UnknownUserError:
             pass # We don't really mind about unknown people wanting to unregister. Should we?
         cnx.send(iq.buildReply('result'))
         cnx.send(Presence(to=user.jid, frm=self.jid, typ='unsubscribe'))

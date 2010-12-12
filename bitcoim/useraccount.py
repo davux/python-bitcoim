@@ -18,40 +18,41 @@ class UserAccount(object):
        representation of the user's bare JID.
     '''
 
-    cache = {}
+    cacheByJID = {}
+    cacheByUsername = {}
 
-    def __new__(cls, jid):
+    def __new__(cls, name):
         '''Create the UserAccount instance, based on their JID.
            The jid variable must be of type JID. The resource is
            ignored, only the bare JID is taken into account.'''
-        jid = jid.getStripped()
-        if jid not in cls.cache:
-            debug("Creating new UserAccount in cache for %s" % jid)
-            cls.cache[jid] = object.__new__(cls)
-            cls.cache[jid].jid = jid
-            cls.cache[jid]._username = None
-            cls.cache[jid].resources = set()
-            cls.cache[jid]._lastBalance = 0
-        debug("Returning UserAccount(%s)" % jid)
-        return cls.cache[jid]
+        if 'JID' != name.__class__.__name__:
+            if name in cls.cacheByUsername:
+                return cls.cacheByUsername[name]
+            req = "select %s from %s where %s=?" % (FIELD_JID, TABLE_REG, FIELD_USERNAME)
+            SQL().execute(req, (name,))
+            res = SQL().fetchone()
+            if res is None:
+                raise UnknownUserError
+            else:
+                username = name
+                jid = res[0]
+        else:
+            username = None
+            jid = name.getStripped()
+        if jid not in cls.cacheByJID:
+            cls.cacheByJID[jid] = object.__new__(cls)
+            cls.cacheByJID[jid].jid = jid
+            cls.cacheByJID[jid].resources = set()
+            cls.cacheByJID[jid]._lastBalance = 0
+            if username is None:
+                username = cls.cacheByJID[jid]._updateUsername()
+            if 0 != len(username):
+                cls.cacheByUsername[username] = cls.cacheByJID[jid]
+        return cls.cacheByJID[jid]
 
     def __str__(self):
         '''The textual representation of a UserAccount is the bare JID.'''
         return self.jid
-
-    def __getattr__(self, name):
-        if 'username' == name:
-            if self._username is None:
-                req = "select %s from %s where %s=?" % (FIELD_USERNAME, TABLE_REG, FIELD_JID)
-                SQL().execute(req, (self.jid,))
-                res = SQL().fetchone()
-                if res is None:
-                    self._username = ''
-                else:
-                    self._username = res[0]
-            return self._username
-        else:
-            return object.__getattr__(self, name)
 
     def __setattr__(self, name, value):
         '''Wrapper for username. Check if the requested username is available and change it.
@@ -62,11 +63,25 @@ class UserAccount(object):
             if self.canUseUsername(username):
                 req = "update %s set %s=? where %s=?" % (TABLE_REG, FIELD_USERNAME, FIELD_JID)
                 SQL().execute(req, (username, self.jid))
-                self._username = username
+                object.__setattr__(self, 'username', username)
             else:
                 raise UsernameNotAvailableError
         else:
             object.__setattr__(self, name, value)
+
+    def _updateUsername(self):
+        '''Fetch the username from the database and update the 'username'
+           variable. For convenience, also return the result.
+        '''
+        req = "select %s from %s where %s=?" % (FIELD_USERNAME, TABLE_REG, FIELD_JID)
+        SQL().execute(req, (self.jid,))
+        res = SQL().fetchone()
+        if res is None:
+            self.username = ''
+            return ''
+        else:
+            self.username = res[0]
+            return res[0]
 
     @staticmethod
     def getAllContacts():
@@ -192,3 +207,6 @@ class AlreadyUnregisteredError(Exception):
 
 class UsernameNotAvailableError(Exception):
     '''The requested username is already in use or is invalid.'''
+
+class UnknownUserError(Exception):
+    '''The user does not exist'''

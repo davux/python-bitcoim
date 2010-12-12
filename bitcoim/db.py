@@ -79,6 +79,7 @@ class Database(object):
                 req = '''CREATE TABLE IF NOT EXISTS registrations (
                          id INTEGER NOT NULL,
                          registered_jid varchar(256) NOT NULL,
+                         username varchar(256) NOT NULL,
                          PRIMARY KEY (id)
                          )'''
                 SQL(self.url).execute(req)

@@ -9,6 +9,7 @@ from xmpp.protocol import JID
 
 FIELD_ID = 'id'
 FIELD_JID = 'registered_jid'
+FIELD_USERNAME = 'username'
 TABLE_REG = 'registrations'
 
 class UserAccount(object):
@@ -28,6 +29,7 @@ class UserAccount(object):
             debug("Creating new UserAccount in cache for %s" % jid)
             cls.cache[jid] = object.__new__(cls)
             cls.cache[jid].jid = jid
+            cls.cache[jid]._username = None
             cls.cache[jid].resources = set()
             cls.cache[jid]._lastBalance = 0
         debug("Returning UserAccount(%s)" % jid)
@@ -37,6 +39,34 @@ class UserAccount(object):
         '''The textual representation of a UserAccount is the bare JID.'''
         return self.jid
 
+    def __getattr__(self, name):
+        if 'username' == name:
+            if self._username is None:
+                req = "select %s from %s where %s=?" % (FIELD_USERNAME, TABLE_REG, FIELD_JID)
+                SQL().execute(req, (self.jid,))
+                res = SQL().fetchone()
+                if res is None:
+                    self._username = ''
+                else:
+                    self._username = res[0]
+            return self._username
+        else:
+            return object.__getattr__(self, name)
+
+    def __setattr__(self, name, value):
+        '''Wrapper for username. Check if the requested username is available and change it.
+           If the user is already registered, change their username in the database.
+           If the username is invalid or taken, raise a UsernameNotAvailableError.'''
+        if 'username' == name:
+            if self.usernameIsAvailable(value):
+                req = "update %s set %s=? where %s=?" % (TABLE_REG, FIELD_USERNAME, FIELD_JID)
+                SQL().execute(req, (value, self.jid))
+                self._username = value
+            else:
+                raise UsernameNotAvailableError
+        else:
+            object.__setattr__(self, name, value)
+
     @staticmethod
     def getAllContacts():
         '''Return the list of all JIDs that are registered on the component.'''
@@ -44,6 +74,11 @@ class UserAccount(object):
         SQL().execute(req)
         result = SQL().fetchall()
         return [result[i][0] for i in range(len(result))]
+
+    def usernameIsAvailable(self, username):
+        '''Is that username available? NOTE: Current implementation is a
+           placeholder. It always return True.'''
+        return True
 
     def isRegistered(self):
         '''Return whether a given JID is already registered.'''
@@ -53,13 +88,14 @@ class UserAccount(object):
         return SQL().fetchone() is not None
 
     def register(self):
-        '''Add given JID to subscribers if possible. Raise exception otherwise.'''
+        '''Add given JID to subscribers if possible. Raise exception otherwise.
+           If the UserAccount object already has a username, insert it.'''
         #TODO: Simply create an address for them
         if self.isRegistered():
             raise AlreadyRegisteredError
         info("Inserting entry for user %s into database" % self.jid)
-        req = "insert into %s (%s) values (?)" % (TABLE_REG, FIELD_JID)
-        SQL().execute(req, (self.jid,))
+        req = "insert into %s (%s, %s) values (?, ?)" % (TABLE_REG, FIELD_JID, FIELD_USERNAME)
+        SQL().execute(req, (self.jid,self.username))
 
     def unregister(self):
         '''Remove given JID from subscribers if it exists. Raise exception otherwise.'''
@@ -144,3 +180,6 @@ class AlreadyRegisteredError(Exception):
 class AlreadyUnregisteredError(Exception):
     '''An unregisration was asked but the JID wasn't registered at the gateway.'''
     pass
+
+class UsernameNotAvailableError(Exception):
+    '''The requested username is already in use or is invalid.'''

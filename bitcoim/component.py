@@ -9,7 +9,8 @@ from bitcoim.command import Command, parse as parseCommand, COMMAND_HELP, \
 from bitcoin.address import InvalidBitcoinAddressError
 from bitcoin.controller import Controller
 from logging import debug, info
-from useraccount import UserAccount, AlreadyRegisteredError
+from useraccount import UserAccount, AlreadyRegisteredError, \
+                        UsernameNotAvailableError
 from xmpp.client import Component as XMPPComponent
 from xmpp.protocol import JID, Message, Iq, Presence, Error, NodeProcessed, \
                           NS_IQ, NS_MESSAGE, NS_PRESENCE, NS_DISCO_INFO, \
@@ -229,17 +230,21 @@ class Component:
                 raise NodeProcessed
             elif 'get' == typ:
                 instructions = Node('instructions')
-                registered = UserAccount(iq.getFrom()).isRegistered()
+                username = Node('username')
+                user = UserAccount(iq.getFrom())
+                registered = user.isRegistered()
                 if registered:
-                    instructions.setData('There is no registration information to update. Simple as that.')
+                    instructions.setData('You may set/change your username if you wish.')
+                    username.setData(user.username)
                 else:
                     debug("A new user is preparing a registration")
-                    instructions.setData('Register? If you do, you\'ll get a Bitcoin address that you can use to send and receive payments via Bitcoin.')
+                    instructions.setData('After registration, you\'ll get a Bitcoin address that you can use to send and receive payments via Bitcoin.\nYou may also choose a username.')
                 reply = iq.buildReply('result')
                 query = reply.getTag('query')
                 if registered:
                     query.addChild(node=Node('registered'))
                 query.addChild(node=instructions)
+                query.addChild(node=username)
                 cnx.send(reply)
                 raise NodeProcessed
             else:
@@ -321,13 +326,25 @@ class Component:
         info("Registration request from %s" % frm)
         isUpdate = False
         user = UserAccount(frm)
+        requestedUsername = ''
+        for child in iq.getQueryChildren():
+            if 'username' == child.getName():
+                requestedUsername = child.getData()
+                break
+        try:
+            user.username = requestedUsername
+            info("%s changed username to '%s'" % (user, user.username))
+        except UsernameNotAvailableError:
+            #TODO: Build a more precise error reply
+            cnx.send(Iq(typ='error', to=frm, frm=self.jid, attrs={'id': iq.getId()}))
+            return
         try:
             user.register()
             new_address = user.createAddress()
             self.addAddressToRoster(cnx, new_address, user)
         except AlreadyRegisteredError:
             info("(actually just an update)")
-            isUpdate = True # This would be stupid, since there's no registration info to update
+            isUpdate = True
         cnx.send(Iq(typ='result', to=frm, frm=self.jid, attrs={'id': iq.getID()}))
         if not isUpdate:
             cnx.send(Presence(typ='subscribe', to=frm.getStripped(), frm=self.jid))

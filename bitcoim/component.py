@@ -91,7 +91,12 @@ class Component:
         if fromJID is None:
             fromJID = self.jid
         if fromJID == self.jid:
-            status = 'Current balance: BTC %s' % user.getBalance()
+            username = user.username
+            if 0 == len(username):
+                status = ''
+            else:
+                status = 'Hi %s! ' % username
+            status += 'Current balance: BTC %s' % user.getBalance()
         else:
             address = Address(fromJID)
             if user.ownsAddress(address):

@@ -277,7 +277,7 @@ class Component:
         elif NS_GATEWAY == ns:
                 if 'get' == typ:
                     desc = Node('desc')
-                    desc.setData('Please enter the Bitcoin address you would like to add.')
+                    desc.setData('Please enter the Bitcoin contact you would like to add.\nYou may enter a Bitcoin address or an existing username.')
                     prompt = Node('prompt')
                     prompt.setData('Bitcoin address')
                     reply = iq.buildReply('result')
@@ -291,15 +291,21 @@ class Component:
                     if (0 != len(children)) and ('prompt' == children[0].getName()):
                         prompt = children[0].getData()
                         debug("Someone wants to convert %s into a JID" % prompt)
+                        jid = Node('jid')
                         try:
-                            jid = Node('jid')
                             jid.setData(Address(prompt).jid)
-                            reply = iq.buildReply('result')
-                            query = reply.getTag('query')
-                            query.addChild(node=jid)
                         except InvalidBitcoinAddressError:
-                            reply = iq.buildReply('error')
-                            debug("TODO: Send an error because the address %s is invalid." % prompt)
+                            try:
+                                jid.setData(UserAccount(prompt).hostedJID)
+                            except UnknownUserError:
+                                reply = iq.buildReply(typ='error')
+                                error = ErrorNode('item-not-found', 404, 'cancel', 'You must give an existing username or a Bitcoin address.')
+                                reply.addChild(node=error)
+                                cnx.send(reply)
+                                raise NodeProcessed
+                        reply = iq.buildReply('result')
+                        query = reply.getTag('query')
+                        query.addChild(node=jid)
                         cnx.send(reply)
                         raise NodeProcessed
         else:

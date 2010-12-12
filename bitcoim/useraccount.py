@@ -64,6 +64,10 @@ class UserAccount(object):
                 req = "update %s set %s=? where %s=?" % (TABLE_REG, FIELD_USERNAME, FIELD_JID)
                 SQL().execute(req, (username, self.jid))
                 object.__setattr__(self, 'username', username)
+                if 0 != len(username):
+                    self.hostedJID = JID(node=username, domain=Address.domain)
+                else:
+                    self.hostedJID = None
             else:
                 raise UsernameNotAvailableError
         else:

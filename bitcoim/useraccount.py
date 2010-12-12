@@ -81,10 +81,10 @@ class UserAccount(object):
         SQL().execute(req, (self.jid,))
         res = SQL().fetchone()
         if res is None:
-            self.username = ''
+            object.__setattr__(self, 'username', '')
             return ''
         else:
-            self.username = res[0]
+            object.__setattr__(self, 'username', res[0])
             return res[0]
 
     @staticmethod

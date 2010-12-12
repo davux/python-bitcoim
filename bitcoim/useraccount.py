@@ -59,7 +59,7 @@ class UserAccount(object):
            If the username is invalid or taken, raise a UsernameNotAvailableError.'''
         if 'username' == name:
             username = value.strip()
-            if self.usernameIsAvailable(username):
+            if self.canUseUsername(username):
                 req = "update %s set %s=? where %s=?" % (TABLE_REG, FIELD_USERNAME, FIELD_JID)
                 SQL().execute(req, (username, self.jid))
                 self._username = username
@@ -76,10 +76,12 @@ class UserAccount(object):
         result = SQL().fetchall()
         return [result[i][0] for i in range(len(result))]
 
-    def usernameIsAvailable(self, username):
-        '''Is that username available? NOTE: Current implementation is a
-           placeholder. It always return True.'''
-        return True
+    def canUseUsername(self, username):
+        '''Is that username available to this user?'''
+        req = "select %s from %s where %s=? and %s!=?" % \
+              (FIELD_ID, TABLE_REG, FIELD_USERNAME, FIELD_JID)
+        SQL().execute(req, (username, self.jid))
+        return SQL().fetchone() is None
 
     def isRegistered(self):
         '''Return whether a given JID is already registered.'''

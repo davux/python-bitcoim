@@ -10,7 +10,7 @@ from bitcoin.address import InvalidBitcoinAddressError
 from bitcoin.controller import Controller
 from logging import debug, info
 from useraccount import UserAccount, AlreadyRegisteredError, \
-                        UsernameNotAvailableError
+                        UsernameNotAvailableError, UnknownUserError
 from xmpp.client import Component as XMPPComponent
 from xmpp.protocol import JID, Message, Iq, Presence, NodeProcessed, \
                           Error, ErrorNode, \
@@ -152,11 +152,18 @@ class Component:
                         error = reason
             else:
                 try:
-                    address = Address(msg.getTo())
-                    (action, args) = parseCommand(msg.getBody())
-                    reply = Command(action, args, address).execute(user)
-                except InvalidBitcoinAddressError:
-                    error = 'This is not a valid bitcoin address.'
+                    try:
+                        address = Address(msg.getTo())
+                        (action, args) = parseCommand(msg.getBody())
+                        reply = Command(action, args, address).execute(user)
+                    except InvalidBitcoinAddressError:
+                        # This has the double advantage to normalize the username
+                        # and check whether it exists
+                        username = UserAccount(msg.getTo().getNode()).username
+                        (action, args) = parseCommand(msg.getBody())
+                        reply = Command(action, args, username=username).execute(user)
+                except UnknownUserError:
+                    error = 'This is not a valid user or bitcoin address.'
                 except CommandTargetError:
                     error = 'This command only works with the gateway'
                 except UnknownCommandError:

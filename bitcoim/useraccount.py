@@ -58,10 +58,11 @@ class UserAccount(object):
            If the user is already registered, change their username in the database.
            If the username is invalid or taken, raise a UsernameNotAvailableError.'''
         if 'username' == name:
-            if self.usernameIsAvailable(value):
+            username = value.strip()
+            if self.usernameIsAvailable(username):
                 req = "update %s set %s=? where %s=?" % (TABLE_REG, FIELD_USERNAME, FIELD_JID)
-                SQL().execute(req, (value, self.jid))
-                self._username = value
+                SQL().execute(req, (username, self.jid))
+                self._username = username
             else:
                 raise UsernameNotAvailableError
         else:

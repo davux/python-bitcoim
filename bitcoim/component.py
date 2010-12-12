@@ -12,7 +12,8 @@ from logging import debug, info
 from useraccount import UserAccount, AlreadyRegisteredError, \
                         UsernameNotAvailableError
 from xmpp.client import Component as XMPPComponent
-from xmpp.protocol import JID, Message, Iq, Presence, Error, NodeProcessed, \
+from xmpp.protocol import JID, Message, Iq, Presence, NodeProcessed, \
+                          Error, ErrorNode, \
                           NS_IQ, NS_MESSAGE, NS_PRESENCE, NS_DISCO_INFO, \
                           NS_DISCO_ITEMS, NS_GATEWAY, NS_REGISTER, NS_VERSION
 from protocol import NS_NICK
@@ -340,8 +341,10 @@ class Component:
             user.username = requestedUsername
             info("%s changed username to '%s'" % (user, user.username))
         except UsernameNotAvailableError:
-            #TODO: Build a more precise error reply
-            cnx.send(Iq(typ='error', to=frm, frm=self.jid, attrs={'id': iq.getId()}))
+            reply = iq.buildReply(typ='error')
+            error = ErrorNode('not-acceptable', 406, 'modify', 'This username is invalid or not available')
+            reply.addChild(node=error)
+            cnx.send(reply)
             return
         try:
             user.register()

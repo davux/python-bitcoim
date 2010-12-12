@@ -77,7 +77,13 @@ class UserAccount(object):
         return [result[i][0] for i in range(len(result))]
 
     def canUseUsername(self, username):
-        '''Is that username available to this user?'''
+        '''Is that username available to this user? For the moment, everything
+           is valid except:
+             - usernames already in use by anyone but the user
+             - valid bitcoin addresses
+        '''
+        if Controller().validateaddress(username)['isvalid']:
+            return False
         req = "select %s from %s where %s=? and %s!=?" % \
               (FIELD_ID, TABLE_REG, FIELD_USERNAME, FIELD_JID)
         SQL().execute(req, (username, self.jid))

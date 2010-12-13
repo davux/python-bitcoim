@@ -53,9 +53,9 @@ class Component:
         for jid in UserAccount.getAllContacts():
             self.cnx.send(Presence(to=jid, frm=self.jid, typ='probe'))
             user = UserAccount(JID(jid))
-            self.sendBitcoinPresence(self.cnx, user)
+            self.sendBitcoinPresence(user)
             for addr in user.getRoster():
-                self.sendBitcoinPresence(self.cnx, user, addr)
+                self.sendBitcoinPresence(user, addr)
 
     def handleDisco(self, cnx):
         '''Define the Service Discovery information for automatic handling
@@ -83,7 +83,7 @@ class Component:
                 self.cnx.send(Presence(to=user.jid, frm=addr, typ='unavailable', status=message))
         debug("Bye.")
 
-    def sendBitcoinPresence(self, cnx, user, fromJID=None):
+    def sendBitcoinPresence(self, user, fromJID=None):
         '''Send a presence information to the user, from a specific address.
            If address is None, send information from the gateway itself.
         '''
@@ -107,9 +107,9 @@ class Component:
                     status += '\nReceived %s%% of total balance' % percentage
             else:
                 status = None
-        cnx.send(Presence(to=user.jid, typ='available', show='online', status=status, frm=fromJID))
+        self.cnx.send(Presence(to=user.jid, typ='available', show='online', status=status, frm=fromJID))
 
-    def addAddressToRoster(self, cnx, address, user):
+    def addAddressToRoster(self, address, user):
         '''Add the JID corresponding to a given bitcoin address to user's
            roster. The suggested name is the bitcoin address.'''
         debug("Adding address %s to %s's roster")
@@ -119,7 +119,7 @@ class Component:
         nick.setNamespace(NS_NICK)
         nick.setData(address.address)
         pres.addChild(node=nick)
-        cnx.send(pres)
+        self.cnx.send(pres)
 
     def messageReceived(self, cnx, msg):
         '''Message received'''
@@ -178,7 +178,7 @@ class Component:
             msg = msg.buildReply(reply)
             msg.setType('chat')
             if user.checkBalance() is not None:
-                self.sendBitcoinPresence(self.cnx, user)
+                self.sendBitcoinPresence(user)
         else:
             msg = msg.buildReply("Error: %s" % error)
             msg.setType('error')
@@ -199,7 +199,7 @@ class Component:
         if to == self.jid:
             if typ == 'subscribe':
                 cnx.send(Presence(typ='subscribed', frm=to, to=user.jid))
-                self.sendBitcoinPresence(cnx, user)
+                self.sendBitcoinPresence(user)
             elif typ == 'subscribed':
                 debug('We were allowed to see %s\'s presence.' % user)
             elif typ == 'unsubscribe':
@@ -207,7 +207,7 @@ class Component:
             elif typ == 'unsubscribed':
                 debug('Unsubscribed. Any interest in this information?')
             elif typ == 'probe':
-                self.sendBitcoinPresence(cnx, user)
+                self.sendBitcoinPresence(user)
             elif (typ == 'available') or (typ is None):
                 self.userResourceConnects(user, resource)
             elif typ == 'unavailable':
@@ -222,11 +222,11 @@ class Component:
                 raise NodeProcessed # Just drop the case. TODO: Handle invalid addresses better
             if typ == 'subscribe':
                 cnx.send(Presence(typ='subscribed', frm=to, to=user.jid))
-                self.sendBitcoinPresence(cnx, user, prs.getTo())
+                self.sendBitcoinPresence(user, prs.getTo())
             elif typ == 'unsubscribe':
                 cnx.send(Presence(typ='unsubscribed', frm=to, to=user.jid))
             elif typ == 'probe':
-                self.sendBitcoinPresence(cnx, user, address.jid)
+                self.sendBitcoinPresence(user, address.jid)
         raise NodeProcessed
 
     def iqReceived(self, cnx, iq):
@@ -319,10 +319,10 @@ class Component:
         debug("New resource (%s) for user %s" % (resource, user))
         user.resourceConnects(resource)
         if not user in self.connectedUsers:
-            self.sendBitcoinPresence(self.cnx, user)
+            self.sendBitcoinPresence(user)
             self.connectedUsers.add(user)
             for address in user.getRoster():
-                self.sendBitcoinPresence(self.cnx, user, address)
+                self.sendBitcoinPresence(user, address)
 
     def userResourceDisconnects(self, user, resource):
         '''Called when the component receives a presence "unavailable" from
@@ -339,7 +339,7 @@ class Component:
             for address in user.getRoster():
                 self.cnx.send(Presence(typ='unavailable', frm=address, to=jid))
 
-    def registrationRequested(self, cnx, iq):
+    def registrationRequested(self, iq):
         '''A registration request was received'''
         frm = iq.getFrom()
         info("Registration request from %s" % frm)
@@ -357,20 +357,20 @@ class Component:
             reply = iq.buildReply(typ='error')
             error = ErrorNode('not-acceptable', 406, 'modify', 'This username is invalid or not available')
             reply.addChild(node=error)
-            cnx.send(reply)
+            self.cnx.send(reply)
             return
         try:
             user.register()
             new_address = user.createAddress()
-            self.addAddressToRoster(cnx, new_address, user)
+            self.addAddressToRoster(new_address, user)
         except AlreadyRegisteredError:
             info("(actually just an update)")
             isUpdate = True
-        cnx.send(Iq(typ='result', to=frm, frm=self.jid, attrs={'id': iq.getID()}))
+        self.cnx.send(Iq(typ='result', to=frm, frm=self.jid, attrs={'id': iq.getID()}))
         if not isUpdate:
-            cnx.send(Presence(typ='subscribe', to=frm.getStripped(), frm=self.jid))
+            self.cnx.send(Presence(typ='subscribe', to=frm.getStripped(), frm=self.jid))
 
-    def unregistrationRequested(self, cnx, iq):
+    def unregistrationRequested(self, iq):
         '''An unregistration request was received'''
         user = UserAccount(iq.getFrom())
         info("Unegistration request from %s" % user)
@@ -378,7 +378,7 @@ class Component:
             user.unregister()
         except UnknownUserError:
             pass # We don't really mind about unknown people wanting to unregister. Should we?
-        cnx.send(iq.buildReply('result'))
-        cnx.send(Presence(to=user.jid, frm=self.jid, typ='unsubscribe'))
-        cnx.send(Presence(to=user.jid, frm=self.jid, typ='unsubscribed'))
-        cnx.send(Presence(to=user.jid, frm=self.jid, typ='unavailable', status='Thanks for using this service. Bye!'))
+        self.cnx.send(iq.buildReply('result'))
+        self.cnx.send(Presence(to=user.jid, frm=self.jid, typ='unsubscribe'))
+        self.cnx.send(Presence(to=user.jid, frm=self.jid, typ='unsubscribed'))
+        self.cnx.send(Presence(to=user.jid, frm=self.jid, typ='unavailable', status='Thanks for using this service. Bye!'))

@@ -67,7 +67,7 @@ class Component:
                'name':APP_DESCRIPTION}]
         info = {'ids': ids, 'features': [NS_DISCO_INFO, NS_DISCO_ITEMS, NS_REGISTER, NS_VERSION, NS_GATEWAY]}
         items = [{'jid': self.jid, 'name': APP_DESCRIPTION}]
-        browser.setDiscoHandler({'items': items, 'info': info})
+        browser.setDiscoHandler({'items': items, 'info': info}, jid=self.jid)
 
     def loop(self, timeout=0):
         '''Main loop. Listen to incoming stanzas.'''

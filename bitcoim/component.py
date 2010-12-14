@@ -131,7 +131,10 @@ class Component:
                 return {'ids': ids, 'features': [NS_DISCO_INFO, NS_DISCO_ITEMS]}
         elif 'items' == what:
             items = []
-            if not user.isRegistered():
+            if user.isRegistered():
+                if node is None:
+                    items.append({'jid': user.getLocalJID(), 'name': 'Your addresses', 'node': 'addresses'})
+            else:
                 items.append({'jid': self.jid, 'name': APP_DESCRIPTION})
             if user.jid in self.admins:
                 if node is None:
@@ -144,6 +147,24 @@ class Component:
                         else:
                             name = contact.username
                         items.append({'jid': contact.getLocalJID(), 'name': name})
+            return items
+
+    def discoReceivedUser(self, cnx, iq, what, targetUser):
+        user = UserAccount(iq.getFrom())
+        node = iq.getQuerynode()
+        if 'info' == what:
+            if node is None:
+                pass # TODO: send a TOC
+            elif 'addresses' == node:
+                ids = [{'category': 'hierarchy', 'type': 'branch', 'name': 'Your addresses'}]
+                return {'ids': ids, 'features': [NS_DISCO_INFO, NS_DISCO_ITEMS, NS_VERSION]}
+        elif 'items' == what:
+            items = []
+            if node is None:
+                pass # TODO: send a TOC
+            elif 'addresses' == node:
+                for address in user.getAddresses():
+                    items.append({'jid': Address(address).jid, 'name': address})
             return items
 
     def messageReceived(self, cnx, msg):

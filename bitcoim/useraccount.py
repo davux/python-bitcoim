@@ -5,6 +5,7 @@ from bitcoim.address import Address
 from bitcoin.controller import Controller
 from logging import debug, info, error
 from db import SQL
+from xmpp.jep0106 import JIDEncode
 from xmpp.protocol import JID
 
 FIELD_ID = 'id'
@@ -65,9 +66,10 @@ class UserAccount(object):
                 SQL().execute(req, (username, self.jid))
                 object.__setattr__(self, 'username', username)
                 if 0 != len(username):
-                    self.hostedJID = JID(node=username, domain=Address.domain)
+                    name = username
                 else:
-                    self.hostedJID = None
+                    name = self.jid
+                self.hostedJID = JID(node=JIDEncode(name), domain=Address.domain)
             else:
                 raise UsernameNotAvailableError
         else:

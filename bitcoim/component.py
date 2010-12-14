@@ -72,14 +72,24 @@ class Component:
         '''Dispatcher for disco queries addressed to a JID hosted at the
            gateway (but not the gateway itself). Calls discoReceivedAddress or
            discoReceivedUser depending on whether the recipient is a Bitcoin
-           address or a user with a non-empty username.'''
+           address or a user.
+           You should normally query a user by their username, provided they
+           set one. If you're an admin, you can additionally query them from
+           their real JID, in any case.
+        '''
         to = iq.getTo()
         try:
             address = Address(to.getStripped())
             return self.discoReceivedAddress(cnx, iq, what, address)
         except InvalidBitcoinAddressError:
             try:
-                user = UserAccount(JIDDecode(to.getNode()))
+                jidprefix = JIDDecode(to.getNode())
+                if iq.getFrom().getStripped() in self.admins and (0 <= to.getNode().find('.')):
+                    # Treat as JID, and must be registered
+                    user = UserAccount(JID(jidprefix), True)
+                else:
+                    # Treat as username (so must be registered, of course)
+                    user = UserAccount(jidprefix)
                 return self.discoReceivedUser(cnx, iq, what, user)
             except UnknownUserError:
                 pass # The default handler will send a "not supported" error

@@ -12,6 +12,7 @@ from logging import debug, info
 from useraccount import UserAccount, AlreadyRegisteredError, \
                         UsernameNotAvailableError, UnknownUserError
 from xmpp.client import Component as XMPPComponent
+from xmpp.jep0106 import JIDDecode
 from xmpp.protocol import JID, Message, Iq, Presence, NodeProcessed, \
                           Error, ErrorNode, \
                           NS_IQ, NS_MESSAGE, NS_PRESENCE, NS_DISCO_INFO, \
@@ -65,6 +66,7 @@ class Component:
         browser = Browser()
         browser.PlugIn(cnx)
         browser.setDiscoHandler(self.discoReceivedGateway, jid=self.jid)
+        browser.setDiscoHandler(self.discoReceivedUserOrAddress)
 
     def loop(self, timeout=0):
         '''Main loop. Listen to incoming stanzas.'''
@@ -149,6 +151,18 @@ class Component:
                         items.append({'jid': contact.getLocalJID(), 'name': name})
             return items
 
+    def discoReceivedUserOrAddress(self, cnx, iq, what):
+        to = iq.getTo()
+        try:
+            address = Address(to.getStripped())
+            return self.discoReceivedAddress(cnx, iq, what, address)
+        except InvalidBitcoinAddressError:
+            try:
+                user = UserAccount(JIDDecode(to.getNode()))
+                return self.discoReceivedUser(cnx, iq, what, user)
+            except UnknownUserError:
+                pass # The default handler will send a "not supported" error
+
     def discoReceivedUser(self, cnx, iq, what, targetUser):
         user = UserAccount(iq.getFrom())
         node = iq.getQuerynode()
@@ -166,6 +180,9 @@ class Component:
                 for address in user.getAddresses():
                     items.append({'jid': Address(address).jid, 'name': address})
             return items
+
+    def discoReceivedAddress(self, cnx, iq, what, address):
+        pass # TODO: handle disco sent to an address
 
     def messageReceived(self, cnx, msg):
         '''Message received'''

@@ -68,6 +68,22 @@ class Component:
         browser.setDiscoHandler(self.discoReceivedGateway, jid=self.jid)
         browser.setDiscoHandler(self.discoReceivedUserOrAddress)
 
+    def discoReceivedUserOrAddress(self, cnx, iq, what):
+        '''Dispatcher for disco queries addressed to a JID hosted at the
+           gateway (but not the gateway itself). Calls discoReceivedAddress or
+           discoReceivedUser depending on whether the recipient is a Bitcoin
+           address or a user with a non-empty username.'''
+        to = iq.getTo()
+        try:
+            address = Address(to.getStripped())
+            return self.discoReceivedAddress(cnx, iq, what, address)
+        except InvalidBitcoinAddressError:
+            try:
+                user = UserAccount(JIDDecode(to.getNode()))
+                return self.discoReceivedUser(cnx, iq, what, user)
+            except UnknownUserError:
+                pass # The default handler will send a "not supported" error
+
     def loop(self, timeout=0):
         '''Main loop. Listen to incoming stanzas.'''
         while not self.bye:
@@ -150,18 +166,6 @@ class Component:
                             name = contact.username
                         items.append({'jid': contact.getLocalJID(), 'name': name})
             return items
-
-    def discoReceivedUserOrAddress(self, cnx, iq, what):
-        to = iq.getTo()
-        try:
-            address = Address(to.getStripped())
-            return self.discoReceivedAddress(cnx, iq, what, address)
-        except InvalidBitcoinAddressError:
-            try:
-                user = UserAccount(JIDDecode(to.getNode()))
-                return self.discoReceivedUser(cnx, iq, what, user)
-            except UnknownUserError:
-                pass # The default handler will send a "not supported" error
 
     def discoReceivedUser(self, cnx, iq, what, targetUser):
         user = UserAccount(iq.getFrom())

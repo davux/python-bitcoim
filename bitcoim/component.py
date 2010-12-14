@@ -8,6 +8,7 @@ from bitcoim.command import Command, parse as parseCommand, COMMAND_HELP, \
 
 from bitcoin.address import InvalidBitcoinAddressError
 from bitcoin.controller import Controller
+from datetime import datetime
 from logging import debug, info, warning
 from useraccount import UserAccount, AlreadyRegisteredError, \
                         UsernameNotAvailableError, UnknownUserError
@@ -16,7 +17,8 @@ from xmpp.jep0106 import JIDDecode
 from xmpp.protocol import JID, Message, Iq, Presence, NodeProcessed, \
                           Error, ErrorNode, \
                           NS_IQ, NS_MESSAGE, NS_PRESENCE, NS_DISCO_INFO, \
-                          NS_DISCO_ITEMS, NS_GATEWAY, NS_REGISTER, NS_VERSION
+                          NS_DISCO_ITEMS, NS_GATEWAY, NS_REGISTER, \
+                          NS_VERSION, NS_LAST
 from protocol import NS_NICK
 from xmpp.simplexml import Node
 from xmpp.browser import Browser
@@ -40,6 +42,7 @@ class Component:
         self.bye = False
         Address.domain = jid
         self.admins = set([])
+        self.last = {'': datetime.now()}
         self.cnx = XMPPComponent(jid, port, debug=debuglevel)
         self.jid = jid
         self.connectedUsers = set()
@@ -153,7 +156,7 @@ class Component:
             if node is None:
                 ids = [{'category': 'gateway', 'type': 'bitcoin',
                         'name':APP_DESCRIPTION}]
-                return {'ids': ids, 'features': [NS_DISCO_INFO, NS_DISCO_ITEMS, NS_REGISTER, NS_VERSION, NS_GATEWAY]}
+                return {'ids': ids, 'features': [NS_DISCO_INFO, NS_DISCO_ITEMS, NS_REGISTER, NS_VERSION, NS_GATEWAY, NS_LAST]}
             elif 'users' == node:
                 ids = [{'category': 'directory', 'type': 'user', 'name': 'Users'}]
                 return {'ids': ids, 'features': [NS_DISCO_INFO, NS_DISCO_ITEMS]}
@@ -405,6 +408,14 @@ class Component:
                         query.addChild(node=jid)
                         cnx.send(reply)
                         raise NodeProcessed
+        elif (NS_LAST == ns) and ('get' == typ):
+            frm = iq.getTo().getNode()
+            if frm in self.last:
+                reply = iq.buildReply('result')
+                query = reply.getTag('query')
+                query.setAttr('seconds', (datetime.now() - self.last[frm]).seconds)
+                cnx.send(reply)
+                raise NodeProcessed
         else:
             debug("Unhandled IQ namespace '%s'." % ns)
 

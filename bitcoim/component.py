@@ -63,11 +63,7 @@ class Component:
         '''
         browser = Browser()
         browser.PlugIn(cnx)
-        ids = [{'category': 'gateway', 'type': 'bitcoin',
-               'name':APP_DESCRIPTION}]
-        info = {'ids': ids, 'features': [NS_DISCO_INFO, NS_DISCO_ITEMS, NS_REGISTER, NS_VERSION, NS_GATEWAY]}
-        items = [{'jid': self.jid, 'name': APP_DESCRIPTION}]
-        browser.setDiscoHandler({'items': items, 'info': info}, jid=self.jid)
+        browser.setDiscoHandler(self.discoReceivedGateway, jid=self.jid)
 
     def loop(self, timeout=0):
         '''Main loop. Listen to incoming stanzas.'''
@@ -120,6 +116,15 @@ class Component:
         nick.setData(address.address)
         pres.addChild(node=nick)
         self.cnx.send(pres)
+
+    def discoReceivedGateway(self, cnx, iq, what):
+        user = UserAccount(iq.getFrom())
+        if 'info' == what:
+            ids = [{'category': 'gateway', 'type': 'bitcoin',
+                    'name':APP_DESCRIPTION}]
+            return {'ids': ids, 'features': [NS_DISCO_INFO, NS_DISCO_ITEMS, NS_REGISTER, NS_VERSION, NS_GATEWAY]}
+        elif 'items' == what:
+            return {'jid': self.jid, 'name': APP_DESCRIPTION}
 
     def messageReceived(self, cnx, msg):
         '''Message received'''

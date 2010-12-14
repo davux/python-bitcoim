@@ -183,7 +183,7 @@ class Component:
                 pass # TODO: send a TOC
             elif 'addresses' == node:
                 if (user.jid == targetUser.jid) or (user.jid in self.admins):
-                    for address in user.getAddresses():
+                    for address in targetUser.getAddresses():
                         items.append({'jid': Address(address).jid, 'name': address})
             return items
 

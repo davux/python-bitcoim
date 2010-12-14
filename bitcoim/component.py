@@ -123,9 +123,13 @@ class Component:
         user = UserAccount(iq.getFrom())
         node = iq.getQuerynode()
         if 'info' == what:
-            ids = [{'category': 'gateway', 'type': 'bitcoin',
-                    'name':APP_DESCRIPTION}]
-            return {'ids': ids, 'features': [NS_DISCO_INFO, NS_DISCO_ITEMS, NS_REGISTER, NS_VERSION, NS_GATEWAY]}
+            if node is None:
+                ids = [{'category': 'gateway', 'type': 'bitcoin',
+                        'name':APP_DESCRIPTION}]
+                return {'ids': ids, 'features': [NS_DISCO_INFO, NS_DISCO_ITEMS, NS_REGISTER, NS_VERSION, NS_GATEWAY]}
+            elif 'users' == node:
+                ids = [{'category': 'directory', 'type': 'user', 'name': 'Users'}]
+                return {'ids': ids, 'features': [NS_DISCO_INFO, NS_DISCO_ITEMS]}
         elif 'items' == what:
             items = []
             if not user.isRegistered():

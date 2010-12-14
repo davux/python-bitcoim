@@ -124,7 +124,10 @@ class Component:
                     'name':APP_DESCRIPTION}]
             return {'ids': ids, 'features': [NS_DISCO_INFO, NS_DISCO_ITEMS, NS_REGISTER, NS_VERSION, NS_GATEWAY]}
         elif 'items' == what:
-            return {'jid': self.jid, 'name': APP_DESCRIPTION}
+            items = []
+            if not user.isRegistered():
+                items.append({'jid': self.jid, 'name': APP_DESCRIPTION})
+            return items
 
     def messageReceived(self, cnx, msg):
         '''Message received'''

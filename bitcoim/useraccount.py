@@ -65,11 +65,6 @@ class UserAccount(object):
                 req = "update %s set %s=? where %s=?" % (TABLE_REG, FIELD_USERNAME, FIELD_JID)
                 SQL().execute(req, (username, self.jid))
                 object.__setattr__(self, 'username', username)
-                if 0 != len(username):
-                    name = username
-                else:
-                    name = self.jid
-                self.hostedJID = JID(node=JIDEncode(name), domain=Address.domain)
             else:
                 raise UsernameNotAvailableError
         else:
@@ -88,6 +83,17 @@ class UserAccount(object):
         else:
             object.__setattr__(self, 'username', res[0])
             return res[0]
+
+    def getLocalJID(self):
+        '''Return the "local" (hosted at the gateway) JID of the user. The node
+           of the JID is either the username or the real JID of the user,
+           encoded according to XEP-0106 so that it can be used as a JID node.
+        '''
+        if 0 != len(username):
+            name = username
+        else:
+            name = self.jid
+        return JID(node=JIDEncode(name), domain=Address.domain)
 
     @staticmethod
     def getAllContacts():

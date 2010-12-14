@@ -108,8 +108,12 @@ class UserAccount(object):
            is valid except:
              - usernames already in use by anyone but the user
              - valid bitcoin addresses
+             - usernames containing a dot, so that the local JID can't conflict
+               with that of a user without a username.
         '''
         if Controller().validateaddress(username)['isvalid']:
+            return False
+        if username.find('.') >= 0:
             return False
         req = "select %s from %s where %s=? and %s!=?" % \
               (FIELD_ID, TABLE_REG, FIELD_USERNAME, FIELD_JID)

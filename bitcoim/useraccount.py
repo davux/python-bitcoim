@@ -84,16 +84,25 @@ class UserAccount(object):
             object.__setattr__(self, 'username', res[0])
             return res[0]
 
+    def getLabel(self):
+        '''A label when you absolutely need to name a user. selects the
+           username if it exists, or fallback to the local JID.
+           Warning: Since this disloses the user's real JID, only show it to
+                    authorized people.
+        '''
+        if 0 != len(self.username):
+            return self.username
+        else:
+            return self.jid
+
     def getLocalJID(self):
         '''Return the "local" (hosted at the gateway) JID of the user. The node
            of the JID is either the username or the real JID of the user,
            encoded according to XEP-0106 so that it can be used as a JID node.
+           Warning: Since this disloses the user's real JID, only show it to
+                    authorized people.
         '''
-        if 0 != len(self.username):
-            name = self.username
-        else:
-            name = self.jid
-        return JID(node=JIDEncode(name), domain=Address.domain)
+        return JID(node=JIDEncode(self.getLabel()), domain=Address.domain)
 
     @staticmethod
     def getAllContacts():

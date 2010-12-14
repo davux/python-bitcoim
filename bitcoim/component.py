@@ -262,9 +262,9 @@ class Component:
             if 'set' == typ:
                 children = iq.getQueryChildren()
                 if (0 != len(children)) and ('remove' == children[0].getName()):
-                    self.unregistrationRequested(cnx, iq)
+                    self.unregistrationRequested(iq)
                 else:
-                    self.registrationRequested(cnx, iq)
+                    self.registrationRequested(iq)
                 raise NodeProcessed
             elif 'get' == typ:
                 instructions = Node('instructions')

@@ -170,22 +170,23 @@ class Component:
     def discoReceivedUser(self, cnx, iq, what, targetUser):
         user = UserAccount(iq.getFrom())
         node = iq.getQuerynode()
-        if 'info' == what:
-            if node is None:
-                pass # TODO: send a TOC
-            elif 'addresses' == node:
-                if (user.jid == targetUser.jid) or (user.jid in self.admins):
+        if (user.jid == targetUser.jid) or (user.jid in self.admins):
+            if 'info' == what:
+                if node is None:
+                    ids = [{'category': 'account', 'type': 'registered', 'name': targetUser.getLabel()}]
+                    return {'ids': ids, 'features': [NS_DISCO_INFO, NS_DISCO_ITEMS, NS_VERSION]}
+                elif 'addresses' == node:
                     ids = [{'category': 'hierarchy', 'type': 'branch', 'name': 'Your addresses'}]
                     return {'ids': ids, 'features': [NS_DISCO_INFO, NS_DISCO_ITEMS, NS_VERSION]}
-        elif 'items' == what:
-            items = []
-            if node is None:
-                pass # TODO: send a TOC
-            elif 'addresses' == node:
-                if (user.jid == targetUser.jid) or (user.jid in self.admins):
+            elif 'items' == what:
+                items = []
+                if node is None:
+                    items.append({'jid': targetUser.getLocalJID(), 'name': 'Your addresses', 'node': 'addresses'})
+                    items.append({'jid': targetUser.jid, 'name': 'Real identity'})
+                elif 'addresses' == node:
                     for address in targetUser.getAddresses():
                         items.append({'jid': Address(address).jid, 'name': address})
-            return items
+                return items
 
     def discoReceivedAddress(self, cnx, iq, what, address):
         pass # TODO: handle disco sent to an address

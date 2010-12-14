@@ -8,7 +8,7 @@ from bitcoim.command import Command, parse as parseCommand, COMMAND_HELP, \
 
 from bitcoin.address import InvalidBitcoinAddressError
 from bitcoin.controller import Controller
-from logging import debug, info
+from logging import debug, info, warning
 from useraccount import UserAccount, AlreadyRegisteredError, \
                         UsernameNotAvailableError, UnknownUserError
 from xmpp.client import Component as XMPPComponent

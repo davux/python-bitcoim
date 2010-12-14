@@ -181,17 +181,21 @@ class Component:
         user = UserAccount(iq.getFrom())
         node = iq.getQuerynode()
         if (user.jid == targetUser.jid) or (user.jid in self.admins):
+            if user.jid == targetUser.jid:
+                label_addresses = 'Your addresses'
+            else:
+                label_addresses = 'Their addresses'
             if 'info' == what:
                 if node is None:
                     ids = [{'category': 'account', 'type': 'registered', 'name': targetUser.getLabel()}]
                     return {'ids': ids, 'features': [NS_DISCO_INFO, NS_DISCO_ITEMS, NS_VERSION]}
                 elif 'addresses' == node:
-                    ids = [{'category': 'hierarchy', 'type': 'branch', 'name': 'Your addresses'}]
+                    ids = [{'category': 'hierarchy', 'type': 'branch', 'name': label_addresses}]
                     return {'ids': ids, 'features': [NS_DISCO_INFO, NS_DISCO_ITEMS, NS_VERSION]}
             elif 'items' == what:
                 items = []
                 if node is None:
-                    items.append({'jid': targetUser.getLocalJID(), 'name': 'Your addresses', 'node': 'addresses'})
+                    items.append({'jid': targetUser.getLocalJID(), 'name': label_addresses, 'node': 'addresses'})
                     items.append({'jid': targetUser.jid, 'name': 'Real identity'})
                 elif 'addresses' == node:
                     for address in targetUser.getAddresses():

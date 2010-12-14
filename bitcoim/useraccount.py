@@ -22,10 +22,14 @@ class UserAccount(object):
     cacheByJID = {}
     cacheByUsername = {}
 
-    def __new__(cls, name):
+    def __new__(cls, name, mustBeRegistered=False):
         '''Create the UserAccount instance, based on their JID.
-           The jid variable must be of type JID. The resource is
-           ignored, only the bare JID is taken into account.'''
+           If name is of type JID, the resource is ignored, only the bare JID
+           is looked up as subscriber JID. If the name is a string, then it is
+           looked up as a username. Raise an UnknownUserError exception if the
+           username is not found, or if an unregistered JID was given and
+           mustBeRegistered is True.
+        '''
         if 'JID' != name.__class__.__name__:
             if name in cls.cacheByUsername:
                 return cls.cacheByUsername[name]
@@ -49,6 +53,8 @@ class UserAccount(object):
                 username = cls.cacheByJID[jid]._updateUsername()
             if 0 != len(username):
                 cls.cacheByUsername[username] = cls.cacheByJID[jid]
+        if mustBeRegistered and not cls.cacheByJID[jid].isRegistered():
+            raise UnknownUserError
         return cls.cacheByJID[jid]
 
     def __str__(self):

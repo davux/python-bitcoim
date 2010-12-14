@@ -121,6 +121,7 @@ class Component:
 
     def discoReceivedGateway(self, cnx, iq, what):
         user = UserAccount(iq.getFrom())
+        node = iq.getQuerynode()
         if 'info' == what:
             ids = [{'category': 'gateway', 'type': 'bitcoin',
                     'name':APP_DESCRIPTION}]
@@ -130,14 +131,17 @@ class Component:
             if not user.isRegistered():
                 items.append({'jid': self.jid, 'name': APP_DESCRIPTION})
             if user.jid in self.admins:
-                for jid in UserAccount.getAllContacts():
-                    contact = UserAccount(JID(jid))
-                    if 0 == len(contact.username):
-                        name = jid
-                    else:
-                        name = contact.username
-                    localjid = str(JID(node=JIDEncode(name), domain=self.jid))
-                    items.append({'jid': localjid, 'name': name})
+                if node is None:
+                    items.append({'jid': self.jid, 'name': 'Users', 'node': 'users'})
+                elif 'users' == node:
+                    for jid in UserAccount.getAllContacts():
+                        contact = UserAccount(JID(jid))
+                        if 0 == len(contact.username):
+                            name = jid
+                        else:
+                            name = contact.username
+                        localjid = str(JID(node=JIDEncode(name), domain=self.jid))
+                        items.append({'jid': localjid, 'name': name})
             return items
 
     def messageReceived(self, cnx, msg):

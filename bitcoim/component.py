@@ -220,9 +220,10 @@ class Component:
                         (action, args) = parseCommand(msg.getBody())
                         reply = Command(action, args, address).execute(user)
                     except InvalidBitcoinAddressError:
-                        # This has the double advantage to normalize the username
-                        # and check whether it exists
-                        username = UserAccount(msg.getTo().getNode()).username
+                        # From node to JID back to username: This has the
+                        # double advantage to normalize the username and check
+                        # whether it exists.
+                        username = UserAccount(JIDDecode(msg.getTo().getNode())).username
                         (action, args) = parseCommand(msg.getBody())
                         reply = Command(action, args, username=username).execute(user)
                 except UnknownUserError:

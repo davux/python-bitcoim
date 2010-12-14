@@ -411,12 +411,12 @@ class Component:
            dot, since they might conflict with usernames.'''
         frm = iq.getFrom()
         info("Registration request from %s" % frm)
-        if 0 <= frm.getStripped().find('.'):
+        if -1 == frm.getStripped().find('.'):
             reply = iq.buildReply(typ='error')
             error = ErrorNode('not-acceptable', 500, 'cancel', 'Your JID must contain a dot. That\'s the rule.')
             reply.addChild(node=error)
             self.cnx.send(reply)
-            warning("Possible hacking attempt: JID '%s' (no dot!) tried to register to the gateway.")
+            warning("Possible hacking attempt: JID '%s' (no dot!) tried to register to the gateway." % frm.getStripped())
             return
         isUpdate = False
         user = UserAccount(frm)

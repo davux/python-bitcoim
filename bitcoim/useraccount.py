@@ -89,8 +89,8 @@ class UserAccount(object):
            of the JID is either the username or the real JID of the user,
            encoded according to XEP-0106 so that it can be used as a JID node.
         '''
-        if 0 != len(username):
-            name = username
+        if 0 != len(self.username):
+            name = self.username
         else:
             name = self.jid
         return JID(node=JIDEncode(name), domain=Address.domain)

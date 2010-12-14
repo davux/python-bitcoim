@@ -139,6 +139,10 @@ class Component:
                 elif 'users' == node:
                     for jid in UserAccount.getAllContacts():
                         contact = UserAccount(JID(jid))
+                        if 0 == len(contact.username):
+                            name = contact.jid
+                        else:
+                            name = contact.username
                         items.append({'jid': contact.getLocalJID(), 'name': name})
             return items
 

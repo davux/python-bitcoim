@@ -174,15 +174,17 @@ class Component:
             if node is None:
                 pass # TODO: send a TOC
             elif 'addresses' == node:
-                ids = [{'category': 'hierarchy', 'type': 'branch', 'name': 'Your addresses'}]
-                return {'ids': ids, 'features': [NS_DISCO_INFO, NS_DISCO_ITEMS, NS_VERSION]}
+                if (user.jid == targetUser.jid) or (user.jid in self.admins):
+                    ids = [{'category': 'hierarchy', 'type': 'branch', 'name': 'Your addresses'}]
+                    return {'ids': ids, 'features': [NS_DISCO_INFO, NS_DISCO_ITEMS, NS_VERSION]}
         elif 'items' == what:
             items = []
             if node is None:
                 pass # TODO: send a TOC
             elif 'addresses' == node:
-                for address in user.getAddresses():
-                    items.append({'jid': Address(address).jid, 'name': address})
+                if (user.jid == targetUser.jid) or (user.jid in self.admins):
+                    for address in user.getAddresses():
+                        items.append({'jid': Address(address).jid, 'name': address})
             return items
 
     def discoReceivedAddress(self, cnx, iq, what, address):

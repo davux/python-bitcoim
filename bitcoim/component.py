@@ -12,6 +12,7 @@ from logging import debug, info
 from useraccount import UserAccount, AlreadyRegisteredError, \
                         UsernameNotAvailableError, UnknownUserError
 from xmpp.client import Component as XMPPComponent
+from xmpp.jep0106 import JIDEncode
 from xmpp.protocol import JID, Message, Iq, Presence, NodeProcessed, \
                           Error, ErrorNode, \
                           NS_IQ, NS_MESSAGE, NS_PRESENCE, NS_DISCO_INFO, \
@@ -38,6 +39,7 @@ class Component:
         '''
         self.bye = False
         Address.domain = jid
+        self.admins = set([])
         self.cnx = XMPPComponent(jid, port, debug=debuglevel)
         self.jid = jid
         self.connectedUsers = set()
@@ -127,6 +129,15 @@ class Component:
             items = []
             if not user.isRegistered():
                 items.append({'jid': self.jid, 'name': APP_DESCRIPTION})
+            if user.jid in self.admins:
+                for jid in UserAccount.getAllContacts():
+                    contact = UserAccount(JID(jid))
+                    if 0 == len(contact.username):
+                        name = jid
+                    else:
+                        name = contact.username
+                    localjid = str(JID(node=JIDEncode(name), domain=self.jid))
+                    items.append({'jid': localjid, 'name': name})
             return items
 
     def messageReceived(self, cnx, msg):

@@ -44,13 +44,11 @@ class Component(XMPPComponent):
         self.last = {'': datetime.now()}
         self.jid = jid
         self.password = password
-        self.server = server
-        self.port = port
         self.connectedUsers = set()
-        XMPPComponent.__init__(self, jid, port, debug=debuglevel)
+        XMPPComponent.__init__(self, server, port, debug=debuglevel)
 
     def start(self, proxy=None):
-        if not self.connect([self.server, self.port], proxy):
+        if not self.connect(None, proxy):
             raise Exception('Unable to connect to %s:%s' % (server, port))
         if not self.auth(self.jid, self.password):
             raise Exception('Unable to authenticate as %s' % (jid))

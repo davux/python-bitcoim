@@ -28,7 +28,7 @@ APP_IDENTIFIER = 'bitcoim'
 APP_VERSION = '0.1'
 APP_DESCRIPTION = 'Bitcoin payment orders via XMPP'
 
-class Component:
+class Component(XMPPComponent):
     '''The component itself.'''
 
     def __init__(self, jid, password, server, port=5347, debuglevel=[]):
@@ -43,31 +43,38 @@ class Component:
         Address.domain = jid
         self.admins = set([])
         self.last = {'': datetime.now()}
-        self.cnx = XMPPComponent(jid, port, debug=debuglevel)
         self.jid = jid
+        self.password = password
+        self.server = server
+        self.port = port
         self.connectedUsers = set()
-        if not self.cnx.connect([server, port]):
+        XMPPComponent.__init__(self, jid, port, debug=debuglevel)
+
+    def start(self, timeout, proxy=None):
+        if not self.connect([self.server, self.port], proxy):
             raise Exception('Unable to connect to %s:%s' % (server, port))
-        if not self.cnx.auth(jid, password):
+        if not self.auth(self.jid, self.password):
             raise Exception('Unable to authenticate as %s' % (jid))
-        self.cnx.RegisterHandler(NS_MESSAGE, self.messageReceived)
-        self.cnx.RegisterHandler(NS_PRESENCE, self.presenceReceived)
-        self.cnx.RegisterHandler(NS_IQ, self.iqReceived)
-        self.handleDisco(self.cnx)
+        self.RegisterHandler(NS_MESSAGE, self.messageReceived)
+        self.RegisterHandler(NS_PRESENCE, self.presenceReceived)
+        self.RegisterHandler(NS_IQ, self.iqReceived)
+        self.handleDisco()
         debug("Sending initial presence to all contacts...")
         for jid in UserAccount.getAllContacts():
-            self.cnx.send(Presence(to=jid, frm=self.jid, typ='probe'))
+            self.send(Presence(to=jid, frm=self.jid, typ='probe'))
             user = UserAccount(JID(jid))
             self.sendBitcoinPresence(user)
             for addr in user.getRoster():
                 self.sendBitcoinPresence(user, addr)
+        while not self.bye:
+            self.Process(timeout)
 
-    def handleDisco(self, cnx):
+    def handleDisco(self):
         '''Define the Service Discovery information for automatic handling
            by the xmpp library.
         '''
         browser = Browser()
-        browser.PlugIn(cnx)
+        browser.PlugIn(self)
         browser.setDiscoHandler(self.discoReceivedGateway, jid=self.jid)
         browser.setDiscoHandler(self.discoReceivedUserOrAddress)
 
@@ -99,16 +106,15 @@ class Component:
 
     def loop(self, timeout=0):
         '''Main loop. Listen to incoming stanzas.'''
-        while not self.bye:
-            self.cnx.Process(timeout)
+        self.start(timeout)
 
     def sayGoodbye(self):
         '''Ending method. Doesn't do anything interesting yet.'''
         message = 'Service is shutting down. See you later.'
         for user in self.connectedUsers:
-            self.cnx.send(Presence(to=user.jid, frm=self.jid, typ='unavailable', status=message))
+            self.send(Presence(to=user.jid, frm=self.jid, typ='unavailable', status=message))
             for addr in user.getRoster():
-                self.cnx.send(Presence(to=user.jid, frm=addr, typ='unavailable', status=message))
+                self.send(Presence(to=user.jid, frm=addr, typ='unavailable', status=message))
         debug("Bye.")
 
     def sendBitcoinPresence(self, user, fromJID=None):
@@ -135,7 +141,7 @@ class Component:
                     status += '\nReceived %s%% of total balance' % percentage
             else:
                 status = None
-        self.cnx.send(Presence(to=user.jid, typ='available', show='online', status=status, frm=fromJID))
+        self.send(Presence(to=user.jid, typ='available', show='online', status=status, frm=fromJID))
 
     def addAddressToRoster(self, address, user):
         '''Add the JID corresponding to a given bitcoin address to user's
@@ -147,7 +153,7 @@ class Component:
         nick.setNamespace(NS_NICK)
         nick.setData(address.address)
         pres.addChild(node=nick)
-        self.cnx.send(pres)
+        self.send(pres)
 
     def discoReceivedGateway(self, cnx, iq, what):
         user = UserAccount(iq.getFrom())
@@ -442,10 +448,10 @@ class Component:
         if (user in self.connectedUsers) and (0 == len(user.resources)):
             jid = JID(user.jid)
             jid.setResource(resource=resource)
-            self.cnx.send(Presence(typ='unavailable', frm=self.jid, to=jid))
+            self.send(Presence(typ='unavailable', frm=self.jid, to=jid))
             self.connectedUsers.remove(user)
             for address in user.getRoster():
-                self.cnx.send(Presence(typ='unavailable', frm=address, to=jid))
+                self.send(Presence(typ='unavailable', frm=address, to=jid))
 
     def registrationRequested(self, iq):
         '''A registration request was received. If an invalid username is
@@ -459,7 +465,7 @@ class Component:
             reply = iq.buildReply(typ='error')
             error = ErrorNode('not-acceptable', 500, 'cancel', 'Your JID must contain a dot. That\'s the rule.')
             reply.addChild(node=error)
-            self.cnx.send(reply)
+            self.send(reply)
             warning("Possible hacking attempt: JID '%s' (no dot!) tried to register to the gateway." % frm.getStripped())
             return
         isUpdate = False
@@ -476,7 +482,7 @@ class Component:
             reply = iq.buildReply(typ='error')
             error = ErrorNode('not-acceptable', 406, 'modify', 'This username is invalid or not available')
             reply.addChild(node=error)
-            self.cnx.send(reply)
+            self.send(reply)
             return
         try:
             user.register()
@@ -485,9 +491,9 @@ class Component:
         except AlreadyRegisteredError:
             info("(actually just an update)")
             isUpdate = True
-        self.cnx.send(Iq(typ='result', to=frm, frm=self.jid, attrs={'id': iq.getID()}))
+        self.send(Iq(typ='result', to=frm, frm=self.jid, attrs={'id': iq.getID()}))
         if not isUpdate:
-            self.cnx.send(Presence(typ='subscribe', to=frm.getStripped(), frm=self.jid))
+            self.send(Presence(typ='subscribe', to=frm.getStripped(), frm=self.jid))
 
     def unregistrationRequested(self, iq):
         '''An unregistration request was received'''
@@ -497,7 +503,7 @@ class Component:
             user.unregister()
         except UnknownUserError:
             pass # We don't really mind about unknown people wanting to unregister. Should we?
-        self.cnx.send(iq.buildReply('result'))
-        self.cnx.send(Presence(to=user.jid, frm=self.jid, typ='unsubscribe'))
-        self.cnx.send(Presence(to=user.jid, frm=self.jid, typ='unsubscribed'))
-        self.cnx.send(Presence(to=user.jid, frm=self.jid, typ='unavailable', status='Thanks for using this service. Bye!'))
+        self.send(iq.buildReply('result'))
+        self.send(Presence(to=user.jid, frm=self.jid, typ='unsubscribe'))
+        self.send(Presence(to=user.jid, frm=self.jid, typ='unsubscribed'))
+        self.send(Presence(to=user.jid, frm=self.jid, typ='unavailable', status='Thanks for using this service. Bye!'))

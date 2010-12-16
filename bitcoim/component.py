@@ -45,7 +45,8 @@ class Component(XMPPComponent):
         self.jid = jid
         self.password = password
         self.connectedUsers = set()
-        XMPPComponent.__init__(self, server, port, debug=debuglevel)
+        XMPPComponent.__init__(self, server, port, debug=debuglevel, \
+                               domains=[jid])
 
     def start(self, proxy=None):
         if not self.connect(None, proxy):

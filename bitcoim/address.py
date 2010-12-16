@@ -16,6 +16,7 @@ class Address(BCAddress):
            If the argument is a JID object, though, decode it first.
         '''
         self._jid = None
+        self._owner = None
         if 'JID' == address.__class__.__name__:
             address.setResource('')
             self._jid = address
@@ -54,15 +55,18 @@ class Address(BCAddress):
                     suffix = ENCODING_SEP + suffix
                 self._jid = JID(node=self.address.lower() + suffix)
             return self._jid
+        elif 'owner' == name:
+            if self._owner is None: # Wait first call to compute it
+                from useraccount import UserAccount
+                self._owner = UserAccount(JID(self.account))
+            return self._owner
         else:
             return BCAddress.__getattr__(self, name)
 
     def getPercentageReceived(self):
         '''Returns the percentage of bitcoins received on this address over the total received
            by the same user. If nothing was received yet, return None.'''
-        from useraccount import UserAccount
-        user = UserAccount(JID(self.account))
-        total = user.getTotalReceived()
+        total = self.owner.getTotalReceived()
         if 0 != total:
             return self.getReceived() * 100 / total
         else:

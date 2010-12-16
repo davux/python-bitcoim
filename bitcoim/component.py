@@ -209,13 +209,13 @@ class Component(XMPPComponent):
         debug("DISCO about an address: %s" % address)
         user = UserAccount(iq.getFrom())
         node = iq.getQuerynode()
-        owner = UserAccount(JID(address.account))
         if 'info' == what:
             if node is None:
                 ids = [{'category': 'hierarchy', 'type': 'branch', 'name': address.address}]
                 return {'ids': ids, 'features': [NS_DISCO_INFO, NS_DISCO_ITEMS, NS_VERSION]}
         elif 'items' == what:
             items = []
+            owner = address.owner
             if node is None and ((user.jid == owner.jid) or (user.jid in self.admins)):
                 items.append({'jid': owner.getLocalJID(), 'name': 'Owner'})
             return items

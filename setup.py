@@ -3,7 +3,7 @@
 from distutils.core import setup
 
 setup(name = "bitcoim",
-    version = "0.0.1",
+    version = "0.1.0",
     description = "BitcoIM working module",
     keywords = "bitcoin bitcoIM",
     author = "David Ammouial",

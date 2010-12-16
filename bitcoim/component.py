@@ -39,7 +39,6 @@ class Component(XMPPComponent):
            - Send initial presence broadcasts to all users, from the gateway
              and from each of their "contacts" (bitcoin addresses)
         '''
-        self.bye = False
         Address.domain = jid
         self.admins = set([])
         self.last = {'': datetime.now()}
@@ -50,7 +49,7 @@ class Component(XMPPComponent):
         self.connectedUsers = set()
         XMPPComponent.__init__(self, jid, port, debug=debuglevel)
 
-    def start(self, timeout, proxy=None):
+    def start(self, proxy=None):
         if not self.connect([self.server, self.port], proxy):
             raise Exception('Unable to connect to %s:%s' % (server, port))
         if not self.auth(self.jid, self.password):
@@ -63,8 +62,6 @@ class Component(XMPPComponent):
             self.sendBitcoinPresence(user)
             for addr in user.getRoster():
                 self.sendBitcoinPresence(user, addr)
-        while not self.bye:
-            self.Process(timeout)
 
     def _RegisterHandlers(self):
         '''Define the Service Discovery information for automatic handling
@@ -103,10 +100,6 @@ class Component(XMPPComponent):
                 return self.discoReceivedUser(iq, what, user)
             except UnknownUserError:
                 pass # The default handler will send a "not supported" error
-
-    def loop(self, timeout=0):
-        '''Main loop. Listen to incoming stanzas.'''
-        self.start(timeout)
 
     def sayGoodbye(self):
         '''Ending method. Doesn't do anything interesting yet.'''

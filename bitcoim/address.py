@@ -11,13 +11,6 @@ class Address(BCAddress):
        to construct an address with a JID.
     '''
 
-    domain = None
-
-    def __new__(cls, address=None):
-        if cls.domain is None:
-            raise DomainNotConfiguredError
-        return BCAddress.__new__(cls)
-
     def __init__(self, address=None):
         '''Constructor. Initialize a bitcoin address normally.
            If the argument is a JID object, though, decode it first.
@@ -59,7 +52,7 @@ class Address(BCAddress):
                     mask //= ENCODING_BASE
                 if ("" != suffix):
                     suffix = ENCODING_SEP + suffix
-                self._jid = JID(node=self.address.lower() + suffix, domain=Address.domain)
+                self._jid = JID(node=self.address.lower() + suffix, domain=JID.domain)
             return self._jid
         else:
             return BCAddress.__getattr__(self, name)
@@ -79,6 +72,3 @@ class Address(BCAddress):
 class CommandSyntaxError(Exception):
     '''There was a syntax in the command.'''
     pass
-
-class DomainNotConfiguredError(Exception):
-    '''The addresses' JID cannot be determined because no domain was configured.'''

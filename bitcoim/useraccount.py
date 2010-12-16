@@ -108,7 +108,7 @@ class UserAccount(object):
            Warning: Since this disloses the user's real JID, only show it to
                     authorized people.
         '''
-        return JID(node=JIDEncode(self.getLabel()), domain=Address.domain)
+        return JID(node=JIDEncode(self.getLabel()), domain=JID.domain)
 
     @staticmethod
     def getAllContacts():

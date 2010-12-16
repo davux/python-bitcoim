@@ -39,7 +39,7 @@ class Component(XMPPComponent):
            - Send initial presence broadcasts to all users, from the gateway
              and from each of their "contacts" (bitcoin addresses)
         '''
-        Address.domain = jid
+        JID.domain = jid
         self.admins = set([])
         self.last = {'': datetime.now()}
         self.jid = jid

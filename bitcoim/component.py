@@ -90,7 +90,7 @@ class Component(XMPPComponent):
         to = iq.getTo()
         try:
             address = Address(to)
-            return self.discoReceivedAddress(cnx, iq, what, address)
+            return self.discoReceivedAddress(iq, what, address)
         except InvalidBitcoinAddressError:
             try:
                 jidprefix = JIDDecode(to.getNode())
@@ -100,7 +100,7 @@ class Component(XMPPComponent):
                 else:
                     # Treat as username (so must be registered, of course)
                     user = UserAccount(jidprefix)
-                return self.discoReceivedUser(cnx, iq, what, user)
+                return self.discoReceivedUser(iq, what, user)
             except UnknownUserError:
                 pass # The default handler will send a "not supported" error
 
@@ -186,7 +186,7 @@ class Component(XMPPComponent):
                         items.append({'jid': contact.getLocalJID(), 'name': name})
             return items
 
-    def discoReceivedUser(self, cnx, iq, what, targetUser):
+    def discoReceivedUser(self, iq, what, targetUser):
         user = UserAccount(iq.getFrom())
         node = iq.getQuerynode()
         if (user.jid == targetUser.jid) or (user.jid in self.admins):
@@ -211,7 +211,7 @@ class Component(XMPPComponent):
                         items.append({'jid': Address(address).jid, 'name': address})
                 return items
 
-    def discoReceivedAddress(self, cnx, iq, what, address):
+    def discoReceivedAddress(self, iq, what, address):
         debug("DISCO about an address: %s" % address)
         user = UserAccount(iq.getFrom())
         node = iq.getQuerynode()

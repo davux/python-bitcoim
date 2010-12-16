@@ -55,10 +55,7 @@ class Component(XMPPComponent):
             raise Exception('Unable to connect to %s:%s' % (server, port))
         if not self.auth(self.jid, self.password):
             raise Exception('Unable to authenticate as %s' % (jid))
-        self.RegisterHandler(NS_MESSAGE, self.messageReceived)
-        self.RegisterHandler(NS_PRESENCE, self.presenceReceived)
-        self.RegisterHandler(NS_IQ, self.iqReceived)
-        self.handleDisco()
+        self._RegisterHandlers()
         debug("Sending initial presence to all contacts...")
         for jid in UserAccount.getAllContacts():
             self.send(Presence(to=jid, frm=self.jid, typ='probe'))
@@ -69,10 +66,13 @@ class Component(XMPPComponent):
         while not self.bye:
             self.Process(timeout)
 
-    def handleDisco(self):
+    def _RegisterHandlers(self):
         '''Define the Service Discovery information for automatic handling
            by the xmpp library.
         '''
+        self.RegisterHandler(NS_MESSAGE, self.messageReceived)
+        self.RegisterHandler(NS_PRESENCE, self.presenceReceived)
+        self.RegisterHandler(NS_IQ, self.iqReceived)
         browser = Browser()
         browser.PlugIn(self)
         browser.setDiscoHandler(self.discoReceivedGateway, jid=self.jid)

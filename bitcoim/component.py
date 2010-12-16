@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # vi: sts=4 et sw=4
 
+from addressable import Addressable
 from bitcoim.address import Address
 from bitcoim.command import Command, parse as parseCommand, COMMAND_HELP, \
                             CommandSyntaxError, CommandTargetError, \
@@ -72,22 +73,25 @@ class Component(Addressable, XMPPComponent):
         self.RegisterHandler(NS_IQ, self.iqReceived)
         browser = Browser()
         browser.PlugIn(self)
-        browser.setDiscoHandler(self.discoReceivedGateway, jid=self.jid)
-        browser.setDiscoHandler(self.discoReceivedUserOrAddress)
+        browser.setDiscoHandler(self.discoReceived)
 
-    def discoReceivedUserOrAddress(self, cnx, iq, what):
-        '''Dispatcher for disco queries addressed to a JID hosted at the
-           gateway (but not the gateway itself). Calls discoReceivedAddress or
-           discoReceivedUser depending on whether the recipient is a Bitcoin
-           address or a user.
-           You should normally query a user by their username, provided they
-           set one. If you're an admin, you can additionally query them from
-           their real JID, in any case.
+    def discoReceived(self, cnx, iq, what):
+        '''Dispatcher for disco queries addressed to any JID hosted at the
+           gateway, including the gateway itself. Calls discoInfo() on the
+           user, the address or the gateway depending on the recipient.
+           A note about querying users: You should normally query a user by
+           their username, provided they set one. If you're an admin, you can
+           additionally query them from their real JID, in any case.
         '''
         to = iq.getTo()
+        fromUser = UserAccount(iq.getFrom())
+        fromUser.isAdmin(fromUser.jid in self.admins) # TODO: Get rid of this.
+        node = iq.getQuerynode()
+        if self.jid == to.getStripped():
+            return self.discoInfo(fromUser, what, node)
         try:
             address = Address(to)
-            return self.discoReceivedAddress(iq, what, address)
+            return address.discoInfo(fromUser, what, node)
         except InvalidBitcoinAddressError:
             try:
                 jidprefix = JIDDecode(to.getNode())
@@ -97,7 +101,7 @@ class Component(Addressable, XMPPComponent):
                 else:
                     # Treat as username (so must be registered, of course)
                     user = UserAccount(jidprefix)
-                return self.discoReceivedUser(iq, what, user)
+                return user.discoInfo(fromUser, what, node)
             except UnknownUserError:
                 pass # The default handler will send a "not supported" error
 
@@ -149,9 +153,7 @@ class Component(Addressable, XMPPComponent):
         pres.addChild(node=nick)
         self.send(pres)
 
-    def discoReceivedGateway(self, cnx, iq, what):
-        user = UserAccount(iq.getFrom())
-        node = iq.getQuerynode()
+    def discoInfo(self, user, what, node):
         if 'info' == what:
             if node is None:
                 ids = [{'category': 'gateway', 'type': 'bitcoin',
@@ -178,46 +180,6 @@ class Component(Addressable, XMPPComponent):
                         else:
                             name = contact.username
                         items.append({'jid': contact.getLocalJID(), 'name': name})
-            return items
-
-    def discoReceivedUser(self, iq, what, targetUser):
-        user = UserAccount(iq.getFrom())
-        node = iq.getQuerynode()
-        if (user.jid == targetUser.jid) or (user.jid in self.admins):
-            if user.jid == targetUser.jid:
-                label_addresses = 'Your addresses'
-            else:
-                label_addresses = 'Their addresses'
-            if 'info' == what:
-                if node is None:
-                    ids = [{'category': 'account', 'type': 'registered', 'name': targetUser.getLabel()}]
-                    return {'ids': ids, 'features': [NS_DISCO_INFO, NS_DISCO_ITEMS, NS_VERSION]}
-                elif 'addresses' == node:
-                    ids = [{'category': 'hierarchy', 'type': 'branch', 'name': label_addresses}]
-                    return {'ids': ids, 'features': [NS_DISCO_INFO, NS_DISCO_ITEMS, NS_VERSION]}
-            elif 'items' == what:
-                items = []
-                if node is None:
-                    items.append({'jid': targetUser.getLocalJID(), 'name': label_addresses, 'node': 'addresses'})
-                    items.append({'jid': targetUser.jid, 'name': 'Real identity'})
-                elif 'addresses' == node:
-                    for address in targetUser.getAddresses():
-                        items.append({'jid': Address(address).jid, 'name': address})
-                return items
-
-    def discoReceivedAddress(self, iq, what, address):
-        debug("DISCO about an address: %s" % address)
-        user = UserAccount(iq.getFrom())
-        node = iq.getQuerynode()
-        if 'info' == what:
-            if node is None:
-                ids = [{'category': 'hierarchy', 'type': 'branch', 'name': address.address}]
-                return {'ids': ids, 'features': [NS_DISCO_INFO, NS_DISCO_ITEMS, NS_VERSION]}
-        elif 'items' == what:
-            items = []
-            owner = address.owner
-            if node is None and ((user.jid == owner.jid) or (user.jid in self.admins)):
-                items.append({'jid': owner.getLocalJID(), 'name': 'Owner'})
             return items
 
     def messageReceived(self, cnx, msg):

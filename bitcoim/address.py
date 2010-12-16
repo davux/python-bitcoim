@@ -1,6 +1,8 @@
+from addressable import Addressable
 from bitcoin.address import Address as BCAddress
 from paymentorder import PaymentOrder
 from jid import JID
+from xmpp.protocol import NS_DISCO_INFO, NS_DISCO_ITEMS, NS_VERSION
 
 ENCODING_SEP = '-'
 ENCODING_BASE = 36 # Any value from 2 to 36 would work - smaller values produce longer suffixes
@@ -71,6 +73,17 @@ class Address(Addressable, BCAddress):
             return self.getReceived() * 100 / total
         else:
             return None
+
+    def discoInfo(self, user, what, node):
+        if 'info' == what:
+            if node is None:
+                ids = [{'category': 'hierarchy', 'type': 'branch', 'name': self.address}]
+                return {'ids': ids, 'features': [NS_DISCO_INFO, NS_DISCO_ITEMS, NS_VERSION]}
+        elif 'items' == what:
+            items = []
+            if node is None and ((user.jid == self.owner.jid) or (user.isAdmin())):
+                items.append({'jid': self.owner.getLocalJID(), 'name': 'Owner'})
+            return items
 
 
 class CommandSyntaxError(Exception):

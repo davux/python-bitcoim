@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 # vi: sts=4 et sw=4
 
+from addressable import Addressable
 from bitcoim.address import Address
 from bitcoin.controller import Controller
 from logging import debug, info, error
 from db import SQL
 from xmpp.jep0106 import JIDEncode
+from xmpp.protocol import NS_DISCO_INFO, NS_DISCO_ITEMS, NS_VERSION
 from jid import JID
 
 FIELD_ID = 'id'
@@ -49,6 +51,7 @@ class UserAccount(Addressable):
             cls.cacheByJID[jid].jid = jid
             cls.cacheByJID[jid].resources = set()
             cls.cacheByJID[jid]._lastBalance = 0
+            cls.cacheByJID[jid]._isAdmin = False
             if username is None:
                 username = cls.cacheByJID[jid]._updateUsername()
             if 0 != len(username):
@@ -227,6 +230,38 @@ class UserAccount(Addressable):
 
     def ownsAddress(self, address):
         return self.jid == address.account
+
+    def isAdmin(self, newValue=None):
+        '''Is the user an admin? This is a temporary implementation, this information
+           should be stored in the database.'''
+        if newValue is None:
+            return self._isAdmin
+        else:
+            self._isAdmin = newValue
+
+    def discoInfo(self, fromUser, what, node):
+        if (fromUser == self) or (fromUser.isAdmin()):
+            if fromUser == self:
+                label_addresses = 'Your addresses'
+            else:
+                label_addresses = 'Their addresses'
+            if 'info' == what:
+                if node is None:
+                    ids = [{'category': 'account', 'type': 'registered', 'name': self.getLabel()}]
+                    return {'ids': ids, 'features': [NS_DISCO_INFO, NS_DISCO_ITEMS, NS_VERSION]}
+                elif 'addresses' == node:
+                    ids = [{'category': 'hierarchy', 'type': 'branch', 'name': label_addresses}]
+                    return {'ids': ids, 'features': [NS_DISCO_INFO, NS_DISCO_ITEMS, NS_VERSION]}
+            elif 'items' == what:
+                items = []
+                if node is None:
+                    items.append({'jid': self.getLocalJID(), 'name': label_addresses, 'node': 'addresses'})
+                    items.append({'jid': self.jid, 'name': 'Real identity'})
+                elif 'addresses' == node:
+                    for address in self.getAddresses():
+                        items.append({'jid': Address(address).jid, 'name': address})
+                return items
+
 
 class AlreadyRegisteredError(Exception):
     '''A JID is already registered at the gateway.'''

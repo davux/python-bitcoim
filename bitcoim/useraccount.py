@@ -13,7 +13,7 @@ FIELD_JID = 'registered_jid'
 FIELD_USERNAME = 'username'
 TABLE_REG = 'registrations'
 
-class UserAccount(object):
+class UserAccount(Addressable):
     '''Represents a user that's registered on the gateway.
        This class has a unique field: jid, which is the string
        representation of the user's bare JID.

@@ -5,7 +5,7 @@ from jid import JID
 ENCODING_SEP = '-'
 ENCODING_BASE = 36 # Any value from 2 to 36 would work - smaller values produce longer suffixes
 
-class Address(BCAddress):
+class Address(Addressable, BCAddress):
     '''A Bitcoin address, but with some xmpp-specific capabilities. In particular, it has
        a 'jid' attribute that represents is encoding as a JID. Reciprocally, it's possible
        to construct an address with a JID.

@@ -29,7 +29,7 @@ APP_IDENTIFIER = 'bitcoim'
 APP_VERSION = '0.1'
 APP_DESCRIPTION = 'Bitcoin payment orders via XMPP'
 
-class Component(XMPPComponent):
+class Component(Addressable, XMPPComponent):
     '''The component itself.'''
 
     def __init__(self, jid, password, server, port=5347, debuglevel=[]):

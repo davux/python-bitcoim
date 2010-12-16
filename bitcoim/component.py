@@ -9,12 +9,13 @@ from bitcoim.command import Command, parse as parseCommand, COMMAND_HELP, \
 from bitcoin.address import InvalidBitcoinAddressError
 from bitcoin.controller import Controller
 from datetime import datetime
+from jid import JID
 from logging import debug, info, warning
 from useraccount import UserAccount, AlreadyRegisteredError, \
                         UsernameNotAvailableError, UnknownUserError
 from xmpp.client import Component as XMPPComponent
 from xmpp.jep0106 import JIDDecode
-from xmpp.protocol import JID, Message, Iq, Presence, NodeProcessed, \
+from xmpp.protocol import Message, Iq, Presence, NodeProcessed, \
                           Error, ErrorNode, \
                           NS_IQ, NS_MESSAGE, NS_PRESENCE, NS_DISCO_INFO, \
                           NS_DISCO_ITEMS, NS_GATEWAY, NS_REGISTER, \

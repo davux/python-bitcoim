@@ -6,7 +6,7 @@ from bitcoin.controller import Controller
 from logging import debug, info, error
 from db import SQL
 from xmpp.jep0106 import JIDEncode
-from xmpp.protocol import JID
+from jid import JID
 
 FIELD_ID = 'id'
 FIELD_JID = 'registered_jid'
@@ -108,7 +108,7 @@ class UserAccount(object):
            Warning: Since this disloses the user's real JID, only show it to
                     authorized people.
         '''
-        return JID(node=JIDEncode(self.getLabel()), domain=JID.domain)
+        return JID(node=JIDEncode(self.getLabel()))
 
     @staticmethod
     def getAllContacts():

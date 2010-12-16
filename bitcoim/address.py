@@ -1,6 +1,6 @@
 from bitcoin.address import Address as BCAddress
 from paymentorder import PaymentOrder
-from xmpp.protocol import JID
+from jid import JID
 
 ENCODING_SEP = '-'
 ENCODING_BASE = 36 # Any value from 2 to 36 would work - smaller values produce longer suffixes
@@ -52,7 +52,7 @@ class Address(BCAddress):
                     mask //= ENCODING_BASE
                 if ("" != suffix):
                     suffix = ENCODING_SEP + suffix
-                self._jid = JID(node=self.address.lower() + suffix, domain=JID.domain)
+                self._jid = JID(node=self.address.lower() + suffix)
             return self._jid
         else:
             return BCAddress.__getattr__(self, name)

@@ -109,6 +109,7 @@ class Component(XMPPComponent):
             for addr in user.getRoster():
                 self.send(Presence(to=user.jid, frm=addr, typ='unavailable', status=message))
         debug("Bye.")
+        self.send('</stream:stream>')
 
     def sendBitcoinPresence(self, user, fromJID=None):
         '''Send a presence information to the user, from a specific address.

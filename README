@@ -1,0 +1,76 @@
+# How to use this package?
+
+## Presentation
+
+This Python package provides the functionality for managing an XMPP component
+that interacts with Bitcoin.
+
+It consists in the following classes, each in its own module.
+
+ - Component: an instance of the component. Your application will generally
+              only run one, but you could run more if needed.
+ - Address: a Bitcoin address, with extra XMPP possibilities. It extends the
+            bitcoin.address.Address class.
+ - Command: a command sent to a component. This class provides the command
+            execution possibilities.
+ - PaymentOrder: a pending payment order. It consists mainly in .queue() and
+                 .confirm() methods.
+ - db.SQL: the main SQL execution wrapper. Not bitcoin-specific, it just makes
+           requests easier.
+ - db.Database: the database used to store user registrations and pending
+                payment orders. This class provides the .upgrade(n) method.
+ - UserAccount: an XMPP user interacting with the gateway and generally
+                registered on it, but not necessarily.
+
+An additional Protocol class adds some missing features to the xmpppy one.
+Nothing specific to bitcoIM but it was needed. It should go to mainstream
+xmpppy eventually.
+
+
+## Workflow
+
+As an example, here is how the main "bitcoIM" executable works:
+
+ 0. Perform some app-specific tasks: set up logging, read the configuration
+    file, check dependencies, etc.
+ 1. Initiate a connection to the database by calling SQL(url=...) and make sure
+    the DB strucure is at least the one the application is expecting. Once the
+    connection is done, it is cached, so you only need to use empty SQL().foo()
+    calls. The upgrading should maybe be made automatically by the module
+    itself, actually. I'm accepting suggestions on that.
+ 2. Set up communication with the Bitcoin controller. Once this is done, the
+    connection is stored in cache, so you only need to call Controller().foo().
+    You can give a URL at any time, though, in order to add it to the cache.
+ 3. Launch the component.
+
+This is only an example of how you could organize your stuff. For example, you
+could manage several components in parallel, or none if your application is
+only responsible for managing payment orders or user accounts.
+
+Please note that your application should handle disconnections from the bitcoin
+controller and from the XMPP server. It is not the module's job to e.g.
+automatically reconnect to the server it the connection was lost.
+
+Please note that in future versions, the classes described above might raise
+exceptions when an event happens, for example a user registers, a payment is
+made, etc. This would allow your application to do a specific action when it
+happens, but obliges it to handle the exception so that it doesn't crash.
+Here again, suggestions are welcome.
+
+
+## What information is stored about the users?
+
+The main important data is actually not stored by the component but by the
+bitcoin controller itself: the "account" part of an address is the JID of the
+user the address belongs to.
+
+Another piece of information is the payment orders that weren't confirmed yet.
+Since this is a bitcoIM-specific functionality, it's stored in the database.
+As soon as a payment was confirmed and made, the entry is erased from the
+database, and only stored in the bitcoin wallet. It is then available with any
+client accessing the wallet, be it the main bitcoin/bitcoind clients or any
+user of the JSON-RPC API.
+
+Last, the username chosen by each user is stored in the database. The username
+is useful for making payments between two registered users without having to
+care about bitcoin addresses.

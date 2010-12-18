@@ -279,6 +279,16 @@ class Component(Addressable, XMPPComponent):
 
     def iqHandler(self, cnx, iq):
         '''IQ received'''
+        to = iq.getTo()
+        fromUser = UserAccount(iq.getFrom())
+        fromUser.isAdmin(fromUser.jid in self.admins) # TODO: Get rid of this.
+        target = generateAddressable(to, [self], fromUser.isAdmin())
+        if target is not None:
+            return target.iqReceived(cnx, iq)
+        # otherwise the default handler will send a "not supported" error
+
+    def iqReceived(self, cnx, iq):
+        '''IQ handler for the component'''
         typ = iq.getType()
         ns = iq.getQueryNS()
         if NS_REGISTER == ns:
@@ -311,17 +321,6 @@ class Component(Addressable, XMPPComponent):
             else:
                 # Unkown namespace and type. The default handler will take care of it if we don't raise NodeProcessed.
                 debug("Unknown IQ with ns '%s' and type '%s'." % (ns, typ))
-        elif (NS_VERSION == ns) and ('get' == typ):
-            name = Node('name')
-            name.setData(APP_NAME)
-            version = Node('version')
-            version.setData(APP_VERSION)
-            reply = iq.buildReply('result')
-            query = reply.getTag('query')
-            query.addChild(node=name)
-            query.addChild(node=version)
-            cnx.send(reply)
-            raise NodeProcessed
         elif NS_GATEWAY == ns:
                 if 'get' == typ:
                     desc = Node('desc')
@@ -356,16 +355,7 @@ class Component(Addressable, XMPPComponent):
                         query.addChild(node=jid)
                         cnx.send(reply)
                         raise NodeProcessed
-        elif (NS_LAST == ns) and ('get' == typ):
-            frm = iq.getTo().getNode()
-            if frm in self.last:
-                reply = iq.buildReply('result')
-                query = reply.getTag('query')
-                query.setAttr('seconds', (datetime.now() - self.last[frm]).seconds)
-                cnx.send(reply)
-                raise NodeProcessed
-        else:
-            debug("Unhandled IQ namespace '%s'." % ns)
+        Addressable.iqHandler(self, cnx, iq)
 
     def userResourceConnects(self, user, resource):
         '''Called when the component receives a presence"available" from a

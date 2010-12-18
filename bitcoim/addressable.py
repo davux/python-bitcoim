@@ -44,3 +44,29 @@ class Addressable(object):
         if 'info' == what:
             ids = [{'category': 'hierarchy', 'type': 'leaf'}]
             return {'ids': ids, 'features': [NS_DISCO_INFO]}
+
+    def iqReceived(self, cnx, iq):
+        '''Default handler for IQ stanzas.'''
+        typ = iq.getType()
+        ns = iq.getQueryNS()
+        if (NS_VERSION == ns) and ('get' == typ):
+            name = Node('name')
+            name.setData(APP_NAME)
+            version = Node('version')
+            version.setData(APP_VERSION)
+            reply = iq.buildReply('result')
+            query = reply.getTag('query')
+            query.addChild(node=name)
+            query.addChild(node=version)
+            cnx.send(reply)
+            raise NodeProcessed
+        elif (NS_LAST == ns) and ('get' == typ):
+            frm = iq.getTo().getNode()
+            if frm in self.last:
+                reply = iq.buildReply('result')
+                query = reply.getTag('query')
+                query.setAttr('seconds', (datetime.now() - self.last[frm]).seconds)
+                cnx.send(reply)
+                raise NodeProcessed
+        else:
+            debug("Unhandled IQ namespace '%s'." % ns)

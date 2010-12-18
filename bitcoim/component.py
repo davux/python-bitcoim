@@ -87,6 +87,16 @@ class Component(Addressable, XMPPComponent):
             return target.discoReceived(fromUser, what, iq.getQuerynode())
         # otherwise the default handler will send a "not supported" error
 
+    def iqHandler(self, cnx, iq):
+        '''IQ received'''
+        to = iq.getTo()
+        fromUser = UserAccount(iq.getFrom())
+        fromUser.isAdmin(fromUser.jid in self.admins) # TODO: Get rid of this.
+        target = generateAddressable(to, [self], fromUser.isAdmin())
+        if target is not None:
+            return target.iqReceived(cnx, iq)
+        # otherwise the default handler will send a "not supported" error
+
     def sayGoodbye(self):
         '''Ending method. Doesn't do anything interesting yet.'''
         message = 'Service is shutting down. See you later.'
@@ -272,16 +282,6 @@ class Component(Addressable, XMPPComponent):
             elif typ == 'probe':
                 self.sendBitcoinPresence(user, address.jid)
         raise NodeProcessed
-
-    def iqHandler(self, cnx, iq):
-        '''IQ received'''
-        to = iq.getTo()
-        fromUser = UserAccount(iq.getFrom())
-        fromUser.isAdmin(fromUser.jid in self.admins) # TODO: Get rid of this.
-        target = generateAddressable(to, [self], fromUser.isAdmin())
-        if target is not None:
-            return target.iqReceived(cnx, iq)
-        # otherwise the default handler will send a "not supported" error
 
     def iqReceived(self, cnx, iq):
         '''IQ handler for the component'''

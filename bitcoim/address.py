@@ -74,7 +74,7 @@ class Address(Addressable, BCAddress):
         else:
             return None
 
-    def discoInfo(self, user, what, node):
+    def discoReceived(self, user, what, node):
         if 'info' == what:
             if node is None:
                 ids = [{'category': 'hierarchy', 'type': 'branch', 'name': self.address}]

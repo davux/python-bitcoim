@@ -77,7 +77,7 @@ class Component(Addressable, XMPPComponent):
 
     def discoHandler(self, cnx, iq, what):
         '''Dispatcher for disco queries addressed to any JID hosted at the
-           gateway, including the gateway itself. Calls discoInfo() on the
+           gateway, including the gateway itself. Calls discoReceived() on the
            user, the address or the gateway depending on the recipient.
            A note about querying users: You should normally query a user by
            their username, provided they set one. If you're an admin, you can
@@ -88,7 +88,7 @@ class Component(Addressable, XMPPComponent):
         fromUser.isAdmin(fromUser.jid in self.admins) # TODO: Get rid of this.
         target = generateAddressable(to, [self], fromUser.isAdmin())
         if target is not None:
-            return target.discoInfo(fromUser, what, iq.getQuerynode())
+            return target.discoReceived(fromUser, what, iq.getQuerynode())
         # otherwise the default handler will send a "not supported" error
 
     def sayGoodbye(self):
@@ -139,7 +139,7 @@ class Component(Addressable, XMPPComponent):
         pres.addChild(node=nick)
         self.send(pres)
 
-    def discoInfo(self, user, what, node):
+    def discoReceived(self, user, what, node):
         if 'info' == what:
             if node is None:
                 ids = [{'category': 'gateway', 'type': 'bitcoin',

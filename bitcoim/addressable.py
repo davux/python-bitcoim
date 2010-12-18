@@ -35,7 +35,7 @@ def generate(jid, components, onlyUsernames=True):
 class Addressable(object):
     '''An addressable object'''
 
-    def discoInfo(self, user, what, node=None):
+    def discoReceived(self, user, what, node=None):
         '''Default method, sends nothing interesting.
            - user: the UserAccount doing the request
            - what: 'info' or 'items'

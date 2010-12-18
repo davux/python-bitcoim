@@ -239,7 +239,7 @@ class UserAccount(Addressable):
         else:
             self._isAdmin = newValue
 
-    def discoInfo(self, fromUser, what, node):
+    def discoReceived(self, fromUser, what, node):
         if (fromUser == self) or (fromUser.isAdmin()):
             if fromUser == self:
                 label_addresses = 'Your addresses'

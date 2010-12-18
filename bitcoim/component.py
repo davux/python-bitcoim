@@ -2,7 +2,7 @@
 # vi: sts=4 et sw=4
 
 from addressable import Addressable, generate as generateAddressable
-from bitcoim import LIB_DESCRIPTION
+from bitcoim import LIB_NAME, LIB_DESCRIPTION, LIB_VERSION
 from bitcoim.address import Address
 from bitcoim.command import Command, parse as parseCommand, COMMAND_HELP, \
                             CommandSyntaxError, CommandTargetError, \
@@ -21,7 +21,7 @@ from xmpp.protocol import Message, Iq, Presence, NodeProcessed, \
                           Error, ErrorNode, \
                           NS_IQ, NS_MESSAGE, NS_PRESENCE, NS_DISCO_INFO, \
                           NS_DISCO_ITEMS, NS_GATEWAY, NS_REGISTER, \
-                          NS_VERSION, NS_LAST
+                          NS_VERSION, NS_LAST, NS_VCARD
 from protocol import NS_NICK
 from xmpp.simplexml import Node
 from xmpp.browser import Browser
@@ -286,7 +286,11 @@ class Component(Addressable, XMPPComponent):
     def iqReceived(self, cnx, iq):
         '''IQ handler for the component'''
         typ = iq.getType()
-        ns = iq.getQueryNS()
+        queries = iq.getChildren() # there should be only one
+        if 0 == len(queries):
+            return
+        ns = queries[0].getNamespace()
+        debug("OK we're handling IQ %s, ns=%s" % (typ, ns))
         if NS_REGISTER == ns:
             if 'set' == typ:
                 children = iq.getQueryChildren()
@@ -351,6 +355,16 @@ class Component(Addressable, XMPPComponent):
                         query.addChild(node=jid)
                         cnx.send(reply)
                         raise NodeProcessed
+        elif NS_VCARD == ns:
+            if 'get' == typ:
+                reply = iq.buildReply('result')
+                query = reply.getTag('vCard')
+                if query is None: # xmpppy bug
+                    query = reply.addChild('vCard', namespace=NS_VCARD)
+                query.addChild('FN', payload=["%s v%s" % (LIB_NAME, LIB_VERSION)])
+                query.addChild('DESC', payload=[LIB_DESCRIPTION])
+                cnx.send(reply)
+                raise NodeProcessed
         Addressable.iqReceived(self, cnx, iq)
 
     def userResourceConnects(self, user, resource):

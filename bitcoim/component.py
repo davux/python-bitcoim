@@ -2,6 +2,7 @@
 # vi: sts=4 et sw=4
 
 from addressable import Addressable, generate as generateAddressable
+from bitcoim import APP_DESCRIPTION
 from bitcoim.address import Address
 from bitcoim.command import Command, parse as parseCommand, COMMAND_HELP, \
                             CommandSyntaxError, CommandTargetError, \
@@ -24,11 +25,6 @@ from xmpp.protocol import Message, Iq, Presence, NodeProcessed, \
 from protocol import NS_NICK
 from xmpp.simplexml import Node
 from xmpp.browser import Browser
-
-APP_NAME = 'BitcoIM'
-APP_IDENTIFIER = 'bitcoim'
-APP_VERSION = '0.1'
-APP_DESCRIPTION = 'Bitcoin payment orders via XMPP'
 
 class Component(Addressable, XMPPComponent):
     '''The component itself.'''

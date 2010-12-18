@@ -1,3 +1,4 @@
+from bitcoim import APP_NAME, APP_VERSION
 from bitcoin.address import InvalidBitcoinAddressError
 from xmpp.jep0106 import JIDDecode
 from xmpp.protocol import NS_DISCO_INFO

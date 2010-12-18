@@ -2,7 +2,7 @@
 # vi: sts=4 et sw=4
 
 from addressable import Addressable, generate as generateAddressable
-from bitcoim import APP_DESCRIPTION
+from bitcoim import LIB_DESCRIPTION
 from bitcoim.address import Address
 from bitcoim.command import Command, parse as parseCommand, COMMAND_HELP, \
                             CommandSyntaxError, CommandTargetError, \
@@ -149,7 +149,7 @@ class Component(Addressable, XMPPComponent):
         if 'info' == what:
             if node is None:
                 ids = [{'category': 'gateway', 'type': 'bitcoin',
-                        'name':APP_DESCRIPTION}]
+                        'name':LIB_DESCRIPTION}]
                 return {'ids': ids, 'features': [NS_DISCO_INFO, NS_DISCO_ITEMS, NS_REGISTER, NS_VERSION, NS_GATEWAY, NS_LAST]}
             elif 'users' == node:
                 ids = [{'category': 'directory', 'type': 'user', 'name': 'Users'}]
@@ -160,7 +160,7 @@ class Component(Addressable, XMPPComponent):
                 if node is None:
                     items.append({'jid': user.getLocalJID(), 'name': 'Your addresses', 'node': 'addresses'})
             else:
-                items.append({'jid': self.jid, 'name': APP_DESCRIPTION})
+                items.append({'jid': self.jid, 'name': LIB_DESCRIPTION})
             if user.jid in self.admins:
                 if node is None:
                     items.append({'jid': self.jid, 'name': 'Users', 'node': 'users'})

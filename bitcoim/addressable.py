@@ -1,4 +1,4 @@
-from bitcoim import APP_NAME, APP_VERSION
+from bitcoim import LIB_NAME, LIB_VERSION
 from bitcoim.jid import JID
 from bitcoin.address import InvalidBitcoinAddressError
 from logging import debug
@@ -57,9 +57,9 @@ class Addressable(object):
         ns = iq.getQueryNS()
         if (NS_VERSION == ns) and ('get' == typ):
             name = Node('name')
-            name.setData(APP_NAME)
+            name.setData(LIB_NAME)
             version = Node('version')
-            version.setData(APP_VERSION)
+            version.setData(LIB_VERSION)
             reply = iq.buildReply('result')
             query = reply.getTag('query')
             query.addChild(node=name)

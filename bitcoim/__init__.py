@@ -2,7 +2,7 @@
 This is the BitcoIM module.
 '''
 
-APP_NAME = 'BitcoIM'
-APP_IDENTIFIER = 'bitcoim'
-APP_VERSION = '0.1.0'
-APP_DESCRIPTION = 'Bitcoin payment orders via XMPP'
+LIB_NAME = 'BitcoIM'
+LIB_IDENTIFIER = 'bitcoim'
+LIB_VERSION = '0.1.0'
+LIB_DESCRIPTION = 'Bitcoin payment orders via XMPP'

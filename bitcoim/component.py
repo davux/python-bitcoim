@@ -355,7 +355,7 @@ class Component(Addressable, XMPPComponent):
                         query.addChild(node=jid)
                         cnx.send(reply)
                         raise NodeProcessed
-        Addressable.iqHandler(self, cnx, iq)
+        Addressable.iqReceived(self, cnx, iq)
 
     def userResourceConnects(self, user, resource):
         '''Called when the component receives a presence"available" from a

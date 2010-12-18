@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # vi: sts=4 et sw=4
 
-from addressable import Addressable
+from addressable import Addressable, generate as generateAddressable
 from bitcoim.address import Address
 from bitcoim.command import Command, parse as parseCommand, COMMAND_HELP, \
                             CommandSyntaxError, CommandTargetError, \
@@ -86,24 +86,10 @@ class Component(Addressable, XMPPComponent):
         to = iq.getTo()
         fromUser = UserAccount(iq.getFrom())
         fromUser.isAdmin(fromUser.jid in self.admins) # TODO: Get rid of this.
-        node = iq.getQuerynode()
-        if self.jid == to.getStripped():
-            return self.discoInfo(fromUser, what, node)
-        try:
-            address = Address(to)
-            return address.discoInfo(fromUser, what, node)
-        except InvalidBitcoinAddressError:
-            try:
-                jidprefix = JIDDecode(to.getNode())
-                if iq.getFrom().getStripped() in self.admins and (0 <= to.getNode().find('.')):
-                    # Treat as JID, and must be registered
-                    user = UserAccount(JID(jidprefix), True)
-                else:
-                    # Treat as username (so must be registered, of course)
-                    user = UserAccount(jidprefix)
-                return user.discoInfo(fromUser, what, node)
-            except UnknownUserError:
-                pass # The default handler will send a "not supported" error
+        target = generateAddressable(to, [self], fromUser.isAdmin())
+        if target is not None:
+            return target.discoInfo(fromUser, what, iq.getQuerynode())
+        # otherwise the default handler will send a "not supported" error
 
     def sayGoodbye(self):
         '''Ending method. Doesn't do anything interesting yet.'''

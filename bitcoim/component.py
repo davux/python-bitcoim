@@ -68,14 +68,14 @@ class Component(Addressable, XMPPComponent):
         '''Define the Service Discovery information for automatic handling
            by the xmpp library.
         '''
-        self.RegisterHandler(NS_MESSAGE, self.messageReceived)
-        self.RegisterHandler(NS_PRESENCE, self.presenceReceived)
-        self.RegisterHandler(NS_IQ, self.iqReceived)
+        self.RegisterHandler(NS_MESSAGE, self.messageHandler)
+        self.RegisterHandler(NS_PRESENCE, self.presenceHandler)
+        self.RegisterHandler(NS_IQ, self.iqHandler)
         browser = Browser()
         browser.PlugIn(self)
-        browser.setDiscoHandler(self.discoReceived)
+        browser.setDiscoHandler(self.discoHandler)
 
-    def discoReceived(self, cnx, iq, what):
+    def discoHandler(self, cnx, iq, what):
         '''Dispatcher for disco queries addressed to any JID hosted at the
            gateway, including the gateway itself. Calls discoInfo() on the
            user, the address or the gateway depending on the recipient.
@@ -168,7 +168,7 @@ class Component(Addressable, XMPPComponent):
                         items.append({'jid': contact.getLocalJID(), 'name': name})
             return items
 
-    def messageReceived(self, cnx, msg):
+    def messageHandler(self, cnx, msg):
         '''Message received'''
         error = None
         user = UserAccount(msg.getFrom())
@@ -235,7 +235,7 @@ class Component(Addressable, XMPPComponent):
 
     # If any presence stanza is received from an unregistered user, don't
     # even look at it. They should register first.
-    def presenceReceived(self, cnx, prs):
+    def presenceHandler(self, cnx, prs):
         '''Presence received'''
         frm = prs.getFrom()
         resource = frm.getResource()
@@ -277,7 +277,7 @@ class Component(Addressable, XMPPComponent):
                 self.sendBitcoinPresence(user, address.jid)
         raise NodeProcessed
 
-    def iqReceived(self, cnx, iq):
+    def iqHandler(self, cnx, iq):
         '''IQ received'''
         typ = iq.getType()
         ns = iq.getQueryNS()

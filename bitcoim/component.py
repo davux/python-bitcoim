@@ -139,10 +139,7 @@ class Component(Addressable, XMPPComponent):
         debug("Adding address %s to %s's roster")
         msg = 'Hi! I\'m your new Bitcoin address'
         pres = Presence(typ='subscribe', status=msg, frm=address.jid, to=user.jid)
-        nick = Node('nick')
-        nick.setNamespace(NS_NICK)
-        nick.setData(address.address)
-        pres.addChild(node=nick)
+        pres.addChild('nick', payload=[address.address], namespace=NS_NICK)
         self.send(pres)
 
     def discoReceived(self, user, what, node):
@@ -313,7 +310,7 @@ class Component(Addressable, XMPPComponent):
                 reply = iq.buildReply('result')
                 query = reply.getTag('query')
                 if registered:
-                    query.addChild(node=Node('registered'))
+                    query.addChild('registered')
                 query.addChild(node=instructions)
                 query.addChild(node=username)
                 cnx.send(reply)
@@ -323,14 +320,10 @@ class Component(Addressable, XMPPComponent):
                 debug("Unknown IQ with ns '%s' and type '%s'." % (ns, typ))
         elif NS_GATEWAY == ns:
                 if 'get' == typ:
-                    desc = Node('desc')
-                    desc.setData('Please enter the Bitcoin contact you would like to add.\nYou may enter a Bitcoin address or an existing username.')
-                    prompt = Node('prompt')
-                    prompt.setData('Bitcoin address')
                     reply = iq.buildReply('result')
                     query = reply.getTag('query')
-                    query.addChild(node=desc)
-                    query.addChild(node=prompt)
+                    query.addChild('desc', payload=['Please enter the Bitcoin contact you would like to add.\nYou may enter a Bitcoin address or an existing username.'])
+                    query.addChild('prompt', payload=['Bitcoin address'])
                     cnx.send(reply)
                     raise NodeProcessed
                 elif 'set' == typ:
@@ -346,8 +339,7 @@ class Component(Addressable, XMPPComponent):
                                 jid.setData(UserAccount(prompt).getLocalJID())
                             except UnknownUserError:
                                 reply = iq.buildReply(typ='error')
-                                error = ErrorNode('item-not-found', 404, 'cancel', 'You must give an existing username or a Bitcoin address.')
-                                reply.addChild(node=error)
+                                reply.addChild(node=ErrorNode('item-not-found', 404, 'cancel', 'You must give an existing username or a Bitcoin address.'))
                                 cnx.send(reply)
                                 raise NodeProcessed
                         reply = iq.buildReply('result')
@@ -405,8 +397,7 @@ class Component(Addressable, XMPPComponent):
         info("Registration request from %s" % frm)
         if -1 == frm.getStripped().find('.'):
             reply = iq.buildReply(typ='error')
-            error = ErrorNode('not-acceptable', 500, 'cancel', 'Your JID must contain a dot. That\'s the rule.')
-            reply.addChild(node=error)
+            reply.addChild(node=ErrorNode('not-acceptable', 500, 'cancel', 'Your JID must contain a dot. That\'s the rule.'))
             self.send(reply)
             warning("Possible hacking attempt: JID '%s' (no dot!) tried to register to the gateway." % frm.getStripped())
             return
@@ -422,8 +413,7 @@ class Component(Addressable, XMPPComponent):
             info("%s changed username to '%s'" % (user, user.username))
         except UsernameNotAvailableError:
             reply = iq.buildReply(typ='error')
-            error = ErrorNode('not-acceptable', 406, 'modify', 'This username is invalid or not available')
-            reply.addChild(node=error)
+            reply.addChild(node=ErrorNode('not-acceptable', 406, 'modify', 'This username is invalid or not available'))
             self.send(reply)
             return
         try:

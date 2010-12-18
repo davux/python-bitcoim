@@ -43,7 +43,7 @@ class Component(Addressable, XMPPComponent):
         '''
         JID.domain = jid
         self.admins = set([])
-        self.last = {'': datetime.now()}
+        self.last = datetime.now()
         self.jid = jid
         self.password = password
         self.connectedUsers = set()

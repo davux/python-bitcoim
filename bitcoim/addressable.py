@@ -31,6 +31,8 @@ def generate(jid, components, onlyUsernames=True):
         except UnknownUserError:
             return None
 
+# Time of last activity (XEP-0012)
+last = None
 
 class Addressable(object):
     '''An addressable object'''
@@ -61,11 +63,10 @@ class Addressable(object):
             cnx.send(reply)
             raise NodeProcessed
         elif (NS_LAST == ns) and ('get' == typ):
-            frm = iq.getTo().getNode()
-            if frm in self.last:
+            if self.last is not None:
                 reply = iq.buildReply('result')
                 query = reply.getTag('query')
-                query.setAttr('seconds', (datetime.now() - self.last[frm]).seconds)
+                query.setAttr('seconds', (datetime.now() - self.last).seconds)
                 cnx.send(reply)
                 raise NodeProcessed
         else:

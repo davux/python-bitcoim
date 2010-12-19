@@ -38,7 +38,6 @@ class Component(Addressable, XMPPComponent):
              and from each of their "contacts" (bitcoin addresses)
         '''
         JID.domain = jid
-        self.admins = set([])
         self.last = datetime.now()
         self.jid = jid
         self.password = password
@@ -81,7 +80,6 @@ class Component(Addressable, XMPPComponent):
         '''
         to = iq.getTo()
         fromUser = UserAccount(iq.getFrom())
-        fromUser.isAdmin(fromUser.jid in self.admins) # TODO: Get rid of this.
         target = generateAddressable(to, [self], not fromUser.isAdmin())
         if target is not None:
             return target.discoReceived(fromUser, what, iq.getQuerynode())
@@ -91,7 +89,6 @@ class Component(Addressable, XMPPComponent):
         '''IQ received'''
         to = iq.getTo()
         fromUser = UserAccount(iq.getFrom())
-        fromUser.isAdmin(fromUser.jid in self.admins) # TODO: Get rid of this.
         target = generateAddressable(to, [self], not fromUser.isAdmin())
         if target is not None:
             return target.iqReceived(cnx, iq)
@@ -158,7 +155,7 @@ class Component(Addressable, XMPPComponent):
                     items.append({'jid': user.getLocalJID(), 'name': 'Your addresses', 'node': 'addresses'})
             else:
                 items.append({'jid': self.jid, 'name': LIB_DESCRIPTION})
-            if user.jid in self.admins:
+            if user.isAdmin():
                 if node is None:
                     items.append({'jid': self.jid, 'name': 'Users', 'node': 'users'})
                 elif 'users' == node:

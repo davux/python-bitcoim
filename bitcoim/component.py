@@ -78,18 +78,16 @@ class Component(Addressable, XMPPComponent):
            their username, provided they set one. If you're an admin, you can
            additionally query them from their real JID, in any case.
         '''
-        to = iq.getTo()
         fromUser = UserAccount(iq.getFrom())
-        target = generateAddressable(to, [self], not fromUser.isAdmin())
+        target = generateAddressable(iq.getTo(), [self], not fromUser.isAdmin())
         if target is not None:
             return target.discoReceived(fromUser, what, iq.getQuerynode())
         # otherwise the default handler will send a "not supported" error
 
     def iqHandler(self, cnx, iq):
         '''IQ received'''
-        to = iq.getTo()
         fromUser = UserAccount(iq.getFrom())
-        target = generateAddressable(to, [self], not fromUser.isAdmin())
+        target = generateAddressable(iq.getTo(), [self], not fromUser.isAdmin())
         if target is not None:
             return target.iqReceived(cnx, iq)
         # otherwise the default handler will send a "not supported" error

@@ -82,7 +82,7 @@ class Component(Addressable, XMPPComponent):
         to = iq.getTo()
         fromUser = UserAccount(iq.getFrom())
         fromUser.isAdmin(fromUser.jid in self.admins) # TODO: Get rid of this.
-        target = generateAddressable(to, [self], fromUser.isAdmin())
+        target = generateAddressable(to, [self], not fromUser.isAdmin())
         if target is not None:
             return target.discoReceived(fromUser, what, iq.getQuerynode())
         # otherwise the default handler will send a "not supported" error
@@ -92,7 +92,7 @@ class Component(Addressable, XMPPComponent):
         to = iq.getTo()
         fromUser = UserAccount(iq.getFrom())
         fromUser.isAdmin(fromUser.jid in self.admins) # TODO: Get rid of this.
-        target = generateAddressable(to, [self], fromUser.isAdmin())
+        target = generateAddressable(to, [self], not fromUser.isAdmin())
         if target is not None:
             return target.iqReceived(cnx, iq)
         # otherwise the default handler will send a "not supported" error

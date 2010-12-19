@@ -281,6 +281,7 @@ class UserAccount(Addressable):
                 query.addChild('NICKNAME', payload=[self.username])
             cnx.send(reply)
             raise NodeProcessed
+        Addressable.iqReceived(self, cnx, iq)
 
 
 class AlreadyRegisteredError(Exception):

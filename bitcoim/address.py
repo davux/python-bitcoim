@@ -102,6 +102,7 @@ class Address(Addressable, BCAddress):
             query.addChild('URL', payload=["http://blockexplorer.com/address/%s" % self.address])
             cnx.send(reply)
             raise NodeProcessed
+        Addressable.iqReceived(self, cnx, iq)
 
 
 class CommandSyntaxError(Exception):

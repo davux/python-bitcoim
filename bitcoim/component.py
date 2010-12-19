@@ -319,34 +319,34 @@ class Component(Addressable, XMPPComponent):
                 # Unkown namespace and type. The default handler will take care of it if we don't raise NodeProcessed.
                 debug("Unknown IQ with ns '%s' and type '%s'." % (ns, typ))
         elif NS_GATEWAY == ns:
-                if 'get' == typ:
+            if 'get' == typ:
+                reply = iq.buildReply('result')
+                query = reply.getTag('query')
+                query.addChild('desc', payload=['Please enter the Bitcoin contact you would like to add.\nYou may enter a Bitcoin address or an existing username.'])
+                query.addChild('prompt', payload=['Bitcoin address'])
+                cnx.send(reply)
+                raise NodeProcessed
+            elif 'set' == typ:
+                children = iq.getQueryChildren()
+                if (0 != len(children)) and ('prompt' == children[0].getName()):
+                    prompt = children[0].getData()
+                    debug("Someone wants to convert %s into a JID" % prompt)
+                    jid = Node('jid')
+                    try:
+                        jid.setData(Address(prompt).jid)
+                    except InvalidBitcoinAddressError:
+                        try:
+                            jid.setData(UserAccount(prompt).getLocalJID())
+                        except UnknownUserError:
+                            reply = iq.buildReply(typ='error')
+                            reply.addChild(node=ErrorNode('item-not-found', 404, 'cancel', 'You must give an existing username or a Bitcoin address.'))
+                            cnx.send(reply)
+                            raise NodeProcessed
                     reply = iq.buildReply('result')
                     query = reply.getTag('query')
-                    query.addChild('desc', payload=['Please enter the Bitcoin contact you would like to add.\nYou may enter a Bitcoin address or an existing username.'])
-                    query.addChild('prompt', payload=['Bitcoin address'])
+                    query.addChild(node=jid)
                     cnx.send(reply)
                     raise NodeProcessed
-                elif 'set' == typ:
-                    children = iq.getQueryChildren()
-                    if (0 != len(children)) and ('prompt' == children[0].getName()):
-                        prompt = children[0].getData()
-                        debug("Someone wants to convert %s into a JID" % prompt)
-                        jid = Node('jid')
-                        try:
-                            jid.setData(Address(prompt).jid)
-                        except InvalidBitcoinAddressError:
-                            try:
-                                jid.setData(UserAccount(prompt).getLocalJID())
-                            except UnknownUserError:
-                                reply = iq.buildReply(typ='error')
-                                reply.addChild(node=ErrorNode('item-not-found', 404, 'cancel', 'You must give an existing username or a Bitcoin address.'))
-                                cnx.send(reply)
-                                raise NodeProcessed
-                        reply = iq.buildReply('result')
-                        query = reply.getTag('query')
-                        query.addChild(node=jid)
-                        cnx.send(reply)
-                        raise NodeProcessed
         elif NS_VCARD == ns:
             if 'get' == typ:
                 reply = iq.buildReply('result')

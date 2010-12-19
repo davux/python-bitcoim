@@ -2,7 +2,8 @@ from addressable import Addressable
 from bitcoin.address import Address as BCAddress
 from paymentorder import PaymentOrder
 from jid import JID
-from xmpp.protocol import NS_DISCO_INFO, NS_DISCO_ITEMS, NS_VERSION
+from xmpp.protocol import NodeProcessed, NS_DISCO_INFO, NS_DISCO_ITEMS, \
+                          NS_VCARD, NS_VERSION
 
 ENCODING_SEP = '-'
 ENCODING_BASE = 36 # Any value from 2 to 36 would work - smaller values produce longer suffixes
@@ -84,6 +85,23 @@ class Address(Addressable, BCAddress):
             if node is None and ((user.jid == self.owner.jid) or (user.isAdmin())):
                 items.append({'jid': self.owner.getLocalJID(), 'name': 'Owner'})
             return items
+
+    def iqReceived(self, cnx, iq):
+        queries = iq.getChildren() # there should be only one
+        if 0 == len(queries):
+            return
+        ns = queries[0].getNamespace()
+        typ = iq.getType()
+        if NS_VCARD == ns and ('get' == typ):
+            reply = iq.buildReply('result')
+            query = reply.getTag('vCard')
+            if query is None: # xmpppy bug
+                query = reply.addChild('vCard', namespace=NS_VCARD)
+            query.addChild('FN', payload=[self.address])
+            #TODO: More generic URL generation
+            query.addChild('URL', payload=["http://blockexplorer.com/address/%s" % self.address])
+            cnx.send(reply)
+            raise NodeProcessed
 
 
 class CommandSyntaxError(Exception):

@@ -26,7 +26,7 @@ def generate(jid, components, onlyUsernames=True):
     except InvalidBitcoinAddressError:
         try:
             jidprefix = JIDDecode(jid.getNode())
-            if onlyUsernames or (-1 == to.getNode().find('.')):
+            if onlyUsernames or (-1 == jidprefix.find('.')):
                 # Treat as username
                 return UserAccount(jidprefix)
             else:

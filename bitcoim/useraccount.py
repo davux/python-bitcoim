@@ -7,7 +7,8 @@ from bitcoin.controller import Controller
 from logging import debug, info, error
 from db import SQL
 from xmpp.jep0106 import JIDEncode
-from xmpp.protocol import NS_DISCO_INFO, NS_DISCO_ITEMS, NS_VERSION
+from xmpp.protocol import NodeProcessed, NS_DISCO_INFO, NS_DISCO_ITEMS, \
+                          NS_VCARD, NS_VERSION
 from jid import JID
 
 FIELD_ID = 'id'
@@ -248,7 +249,7 @@ class UserAccount(Addressable):
             if 'info' == what:
                 if node is None:
                     ids = [{'category': 'account', 'type': 'registered', 'name': self.getLabel()}]
-                    return {'ids': ids, 'features': [NS_DISCO_INFO, NS_DISCO_ITEMS, NS_VERSION]}
+                    return {'ids': ids, 'features': [NS_DISCO_INFO, NS_DISCO_ITEMS, NS_VCARD, NS_VERSION]}
                 elif 'addresses' == node:
                     ids = [{'category': 'hierarchy', 'type': 'branch', 'name': label_addresses}]
                     return {'ids': ids, 'features': [NS_DISCO_INFO, NS_DISCO_ITEMS, NS_VERSION]}
@@ -261,6 +262,25 @@ class UserAccount(Addressable):
                     for address in self.getAddresses():
                         items.append({'jid': Address(address).jid, 'name': address})
                 return items
+
+    def iqReceived(self, cnx, iq):
+        queries = iq.getChildren() # there should be only one
+        if 0 == len(queries):
+            return
+        ns = queries[0].getNamespace()
+        typ = iq.getType()
+        requester = UserAccount(iq.getFrom())
+        if NS_VCARD == ns and ('get' == typ):
+            reply = iq.buildReply('result')
+            query = reply.getTag('vCard')
+            if query is None: # xmpppy bug
+                query = reply.addChild('vCard', namespace=NS_VCARD)
+            if requester == self or requester.isAdmin():
+                query.addChild('FN', payload=[self.jid])
+            if 0 != len(self.username):
+                query.addChild('NICKNAME', payload=[self.username])
+            cnx.send(reply)
+            raise NodeProcessed
 
 
 class AlreadyRegisteredError(Exception):

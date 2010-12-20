@@ -22,11 +22,6 @@ It consists in the following classes, each in its own module.
  - UserAccount: an XMPP user interacting with the gateway and generally
                 registered on it, but not necessarily.
 
-An additional Protocol class adds some missing features to the xmpppy one.
-Nothing specific to bitcoIM but it was needed. It should go to mainstream
-xmpppy eventually.
-
-
 ## Workflow
 
 As an example, here is how the main "bitcoIM" executable works:

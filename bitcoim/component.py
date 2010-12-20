@@ -12,7 +12,6 @@ from command import Command, parse as parseCommand, COMMAND_HELP, \
 from datetime import datetime
 from jid import JID
 from logging import debug, info, warning
-from protocol import NS_NICK
 from useraccount import UserAccount, AlreadyRegisteredError, UnknownUserError,\
                         UsernameNotAvailableError
 from xmpp.browser import Browser
@@ -22,7 +21,7 @@ from xmpp.protocol import Message, Iq, Presence, NodeProcessed, \
                           Error, ErrorNode, \
                           NS_IQ, NS_MESSAGE, NS_PRESENCE, NS_DISCO_INFO, \
                           NS_DISCO_ITEMS, NS_GATEWAY, NS_REGISTER, \
-                          NS_VERSION, NS_LAST, NS_VCARD
+                          NS_NICK, NS_VERSION, NS_LAST, NS_VCARD
 from xmpp.simplexml import Node
 
 class Component(Addressable, XMPPComponent):

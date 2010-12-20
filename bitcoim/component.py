@@ -54,9 +54,9 @@ class Component(Addressable, XMPPComponent):
         for jid in UserAccount.getAllContacts():
             self.send(Presence(to=jid, frm=self.jid, typ='probe'))
             user = UserAccount(JID(jid))
-            self.sendBitcoinPresence(user)
+            self.sendBitcoinPresence(self, user)
             for addr in user.getRoster():
-                self.sendBitcoinPresence(user, addr)
+                Address(JID(addr)).sendBitcoinPresence(self, user)
 
     def _RegisterHandlers(self):
         '''Define the Service Discovery information for automatic handling
@@ -114,6 +114,18 @@ class Component(Addressable, XMPPComponent):
             raise NodeProcessed
         # otherwise the default handler will send a "not supported" error
 
+    def presenceHandler(self, cnx, prs):
+        '''Presence received. If any presence stanza is received from an
+           unregistered user, don't even look at it. They should register
+           first.'''
+        fromUser = UserAccount(prs.getFrom())
+        if not fromUser.isRegistered():
+            return #TODO: Send a registration-required error
+        target = generateAddressable(prs.getTo(), [self], not fromUser.isAdmin())
+        if target is not None:
+            return target.presenceReceived(cnx, prs)
+        # otherwise the default handler will send a "not supported" error
+
     def sayGoodbye(self):
         '''Ending method. Doesn't do anything interesting yet.'''
         message = 'Service is shutting down. See you later.'
@@ -124,31 +136,17 @@ class Component(Addressable, XMPPComponent):
         debug("Bye.")
         self.send('</stream:stream>')
 
-    def sendBitcoinPresence(self, user, fromJID=None):
-        '''Send a presence information to the user, from a specific address.
-           If address is None, send information from the gateway itself.
-        '''
+    def sendBitcoinPresence(self, cnx, user):
+        '''Send a presence information to the user, from the component.'''
         if not user.isRegistered():
             return
-        if fromJID is None:
-            fromJID = self.jid
-        if fromJID == self.jid:
-            username = user.username
-            if 0 == len(username):
-                status = ''
-            else:
-                status = 'Hi %s! ' % username
-            status += 'Current balance: BTC %s' % user.getBalance()
+        username = user.username
+        if 0 == len(username):
+            status = ''
         else:
-            address = Address(fromJID)
-            if user.ownsAddress(address):
-                status = 'This address is mine'
-                percentage = address.getPercentageReceived()
-                if percentage is not None:
-                    status += '\nReceived %s%% of total balance' % percentage
-            else:
-                status = None
-        self.send(Presence(to=user.jid, typ='available', show='online', status=status, frm=fromJID))
+            status = 'Hi %s! ' % username
+        status += 'Current balance: BTC %s' % user.getBalance()
+        self.send(Presence(to=user.jid, typ='available', show='online', status=status, frm=self.jid))
 
     def addAddressToRoster(self, address, user):
         '''Add the JID corresponding to a given bitcoin address to user's
@@ -203,7 +201,7 @@ class Component(Addressable, XMPPComponent):
                 msg = msg.buildReply(Command(action, args).execute(user))
                 msg.setType('chat')
                 if user.checkBalance() is not None:
-                    self.sendBitcoinPresence(user)
+                    self.sendBitcoinPresence(cnx, user)
         else:
             error = "You're not registered. Please register, it's free!"
             msg = msg.buildReply("Error: %s" % error)
@@ -211,48 +209,30 @@ class Component(Addressable, XMPPComponent):
         cnx.send(msg)
         raise NodeProcessed
 
-    # If any presence stanza is received from an unregistered user, don't
-    # even look at it. They should register first.
-    def presenceHandler(self, cnx, prs):
-        '''Presence received'''
+    def presenceReceived(self, cnx, prs):
+        '''Presence received from a registered user'''
         frm = prs.getFrom()
-        resource = frm.getResource()
         user = UserAccount(frm)
+        resource = frm.getResource()
         to = prs.getTo().getStripped()
-        if not user.isRegistered():
-            return #TODO: Send a registration-required error
         typ = prs.getType()
-        if to == self.jid:
-            if typ == 'subscribe':
-                cnx.send(Presence(typ='subscribed', frm=to, to=user.jid))
-                self.sendBitcoinPresence(user)
-            elif typ == 'subscribed':
-                debug('We were allowed to see %s\'s presence.' % user)
-            elif typ == 'unsubscribe':
-                debug('Just received an "unsubscribe" presence stanza. What does that mean?')
-            elif typ == 'unsubscribed':
-                debug('Unsubscribed. Any interest in this information?')
-            elif typ == 'probe':
-                self.sendBitcoinPresence(user)
-            elif (typ == 'available') or (typ is None):
-                self.userResourceConnects(user, resource)
-            elif typ == 'unavailable':
-                self.userResourceDisconnects(user, resource)
-            elif typ == 'error':
-                debug('Presence error. TODO: Handle it by not sending presence updates to them until they send a non-error.')
-        else:
-            try:
-                address = Address(JID(prs.getTo()))
-            except InvalidBitcoinAddressError:
-                debug("Invalid address %s" % prs.getTo())
-                raise NodeProcessed # Just drop the case. TODO: Handle invalid addresses better
-            if typ == 'subscribe':
-                cnx.send(Presence(typ='subscribed', frm=to, to=user.jid))
-                self.sendBitcoinPresence(user, prs.getTo())
-            elif typ == 'unsubscribe':
-                cnx.send(Presence(typ='unsubscribed', frm=to, to=user.jid))
-            elif typ == 'probe':
-                self.sendBitcoinPresence(user, address.jid)
+        if typ == 'subscribe':
+            cnx.send(Presence(typ='subscribed', frm=to, to=user.jid))
+            self.sendBitcoinPresence(cnx, user)
+        elif typ == 'subscribed':
+            debug('We were allowed to see %s\'s presence.' % user)
+        elif typ == 'unsubscribe':
+            debug('Just received an "unsubscribe" presence stanza. What does that mean?')
+        elif typ == 'unsubscribed':
+            debug('Unsubscribed. Any interest in this information?')
+        elif typ == 'probe':
+            self.sendBitcoinPresence(cnx, user)
+        elif (typ == 'available') or (typ is None):
+            self.userResourceConnects(user, resource)
+        elif typ == 'unavailable':
+            self.userResourceDisconnects(user, resource)
+        elif typ == 'error':
+            debug('Presence error. TODO: Handle it by not sending presence updates to them until they send a non-error.')
         raise NodeProcessed
 
     def iqReceived(self, cnx, iq):
@@ -342,10 +322,10 @@ class Component(Addressable, XMPPComponent):
         debug("New resource (%s) for user %s" % (resource, user))
         user.resourceConnects(resource)
         if not user in self.connectedUsers:
-            self.sendBitcoinPresence(user)
+            self.sendBitcoinPresence(self, user)
             self.connectedUsers.add(user)
-            for address in user.getRoster():
-                self.sendBitcoinPresence(user, address)
+            for jid in user.getRoster():
+                Address(JID(jid)).sendBitcoinPresence(self, user)
 
     def userResourceDisconnects(self, user, resource):
         '''Called when the component receives a presence "unavailable" from

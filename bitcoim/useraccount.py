@@ -7,10 +7,10 @@ from bitcoin.controller import Controller
 from command import parse as parseCommand, Command
 from db import SQL
 from jid import JID
-from logging import debug, info, error
-from xmpp.jep0106 import JIDEncode
-from xmpp.protocol import NodeProcessed, NS_DISCO_INFO, NS_DISCO_ITEMS, \
-                          NS_VCARD, NS_VERSION
+from logging import debug, info, error, warning
+from xmpp.jep0106 import JIDEncode, JIDDecode
+from xmpp.protocol import Presence, NodeProcessed, NS_VCARD, NS_VERSION, \
+                          NS_DISCO_INFO, NS_DISCO_ITEMS
 
 FIELD_ID = 'id'
 FIELD_JID = 'registered_jid'
@@ -291,6 +291,48 @@ class UserAccount(Addressable):
         msg.setType('chat')
         cnx.send(msg)
         raise NodeProcessed
+
+    def presenceReceived(self, cnx, prs):
+        '''Called when a presence packet was received. After a subscription
+           request and a presence probe, a presence update is sent.'''
+        fromUser = UserAccount(prs.getFrom())
+        to = prs.getTo().getStripped()
+        isUsername = (JIDDecode(prs.getTo().getNode()) == self.username)
+        typ = prs.getType()
+        if typ == 'subscribe':
+            cnx.send(Presence(typ='subscribed', frm=to, to=fromUser.jid))
+            self.sendBitcoinPresence(cnx, fromUser, isUsername)
+        elif typ == 'unsubscribe':
+            cnx.send(Presence(typ='unsubscribed', frm=to, to=fromUser.jid))
+        elif typ == 'probe':
+            self.sendBitcoinPresence(cnx, fromUser, isUsername)
+        raise NodeProcessed
+
+    def sendBitcoinPresence(self, cnx, user, fromUsername=True):
+        '''Send a presence information to 'user', from us.
+           If fromUsername is True and we have a username, use
+           username@gateway.tld as a "from" field.
+           If fromUsername is False and the recipient is an admin, use the
+           "hosted" form of their real JID.
+           Otherwise, don't send anything.
+           Return True if anything was sent, False otherwise.'''
+        if not user.isRegistered():
+            return
+        if (user == self) or (user.isAdmin()):
+            status = 'Current balance: BTC %s' % self.getBalance()
+        else:
+            status = None
+        if fromUsername and (len(self.username) != 0):
+            node = self.username
+        elif (not fromUsername) and user.isAdmin():
+            node = self.jid
+        else:
+            warning("Possible programming error: Trying to send %s's bitcoin presence. As a username? %s. Has one? %s. To an admin? %s" \
+                    % (self, fromUsername, self.username, user.isAdmin()))
+            return False
+        cnx.send(Presence(to=user.jid, typ='available', show='online', \
+                          status=status, frm=JID(node=JIDEncode(node))))
+        return True
 
 
 class AlreadyRegisteredError(Exception):

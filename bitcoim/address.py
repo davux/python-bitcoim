@@ -3,8 +3,8 @@ from bitcoin.address import Address as BCAddress
 from command import parse as parseCommand, Command
 from jid import JID
 from paymentorder import PaymentOrder
-from xmpp.protocol import NodeProcessed, NS_DISCO_INFO, NS_DISCO_ITEMS, \
-                          NS_VCARD, NS_VERSION
+from xmpp.protocol import Presence, NodeProcessed, NS_VCARD, NS_VERSION, \
+                          NS_DISCO_INFO, NS_DISCO_ITEMS
 
 ENCODING_SEP = '-'
 ENCODING_BASE = 36 # Any value from 2 to 36 would work - smaller values produce longer suffixes
@@ -113,6 +113,33 @@ class Address(Addressable, BCAddress):
         msg.setType('chat')
         cnx.send(msg)
         raise NodeProcessed
+
+    def presenceReceived(self, cnx, prs):
+        from useraccount import UserAccount
+        user = UserAccount(prs.getFrom())
+        to = prs.getTo().getStripped()
+        typ = prs.getType()
+        if typ == 'subscribe':
+            cnx.send(Presence(typ='subscribed', frm=to, to=user.jid))
+            self.sendBitcoinPresence(cnx, user)
+        elif typ == 'unsubscribe':
+            cnx.send(Presence(typ='unsubscribed', frm=to, to=user.jid))
+        elif typ == 'probe':
+            self.sendBitcoinPresence(cnx, user)
+        raise NodeProcessed
+
+    def sendBitcoinPresence(self, cnx, user):
+        '''Send a presence information to the user, from this address.'''
+        if not user.isRegistered():
+            return
+        if user.ownsAddress(self):
+            status = 'This address is mine'
+            percentage = self.getPercentageReceived()
+            if percentage is not None:
+                status += '\nReceived %s%% of total balance' % percentage
+        else:
+            status = None
+        cnx.send(Presence(to=user.jid, typ='available', show='online', status=status, frm=self.jid))
 
 
 class CommandSyntaxError(Exception):

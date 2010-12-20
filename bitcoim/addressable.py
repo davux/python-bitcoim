@@ -3,7 +3,8 @@ from bitcoin.address import InvalidBitcoinAddressError
 from jid import JID
 from logging import debug
 from xmpp.jep0106 import JIDDecode
-from xmpp.protocol import NodeProcessed, NS_DISCO_INFO, NS_LAST, NS_VERSION
+from xmpp.protocol import Presence, NodeProcessed, NS_LAST, NS_VERSION, \
+                          NS_DISCO_INFO
 from xmpp.simplexml import Node
 
 '''

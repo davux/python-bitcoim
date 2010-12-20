@@ -241,16 +241,19 @@ class UserAccount(Addressable):
         else:
             self._isAdmin = newValue
 
-    def pendingPayments(self, recipient=None):
-        '''List all pending payments of the user. If a recipient is given, only
-           list pending payments to that recipient.'''
+    def pendingPayments(self, target=None):
+        '''List all pending payments of the user. If a valid target is given,
+           only list pending payments to that target.'''
         req = "select %s, %s, %s, %s, %s from %s where %s=?" % \
               ('date', 'recipient', 'amount', 'comment', 'confirmation_code', \
                'payments', 'from_jid')
         values = [self.jid]
-        if recipient is not None:
+        if isinstance(target, UserAccount):
             req += " and %s=?" % ('recipient')
-            values.append(recipient)
+            values.append(target.username)
+        elif isinstance(target, Address):
+            req += " and %s=?" % ('recipient')
+            values.append(target.address)
         SQL().execute(req, tuple(values))
         return SQL().fetchall()
 
@@ -319,7 +322,7 @@ class UserAccount(Addressable):
     def messageReceived(self, cnx, msg):
         from command import parse as parseCommand, Command
         (action, args) = parseCommand(msg.getBody())
-        command = Command(action, args, username=self.username)
+        command = Command(action, args, self)
         msg = msg.buildReply(command.execute(UserAccount(msg.getFrom())))
         msg.setType('chat')
         cnx.send(msg)

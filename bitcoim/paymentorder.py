@@ -1,4 +1,4 @@
-from bitcoin.address import Address
+from bitcoin.address import Address, InvalidBitcoinAddressError
 from bitcoin.controller import Controller
 from datetime import datetime
 from db import SQL
@@ -10,22 +10,25 @@ from xmpp import JID
 class PaymentOrder(object):
     '''A payment order.'''
 
-    def __init__(self, sender, address=None, username='', amount=None, comment='', fee=0, code=None):
+    def __init__(self, sender, target=None, amount=None, comment='', fee=0, code=None):
+        from useraccount import UserAccount
         self.sender = sender
-        self.recipient = None
-        if (address is not None) and (0 != len(username)):
-            raise InvalidPaymentError, 'You cannot give an address and a username'
-        if address is not None:
-            if sender.ownsAddress(address):
+        self.target = target
+        if isinstance(target, Address):
+            if sender.ownsAddress(target):
                 raise PaymentToSelfError
-            self.recipient = address.address
-        elif 0 != len(username):
-            if sender.username == username:
+            self.recipient = target.address
+        elif isinstance(target, UserAccount):
+            if sender == target:
                 raise PaymentToSelfError
-            self.recipient = username
+            if 0 == len(target.username):
+                raise InvalidPaymentError, 'This user doesn\'t accept direct payments.'
+            self.recipient = target.username
+        else:
+            self.recipient = None
         if code is None:
-            if (address is None) and (0 == len(username)):
-                raise InvalidPaymentError, 'An address or a username must be given'
+            if self.recipient is None:
+                raise InvalidPaymentError, 'A recipient or an existing payment code must be given'
             self.amount = amount
             self.comment = comment
             self.fee = fee
@@ -59,6 +62,11 @@ class PaymentOrder(object):
             else:
                 (self.entryId, self.date, self.recipient, self.amount, \
                  self.comment, self.fee) = tuple(paymentOrder)
+            try:
+                self.target = Address(self.recipient)
+            except InvalidBitcoinAddressError:
+                # may raise UnknownUserError
+                self.target = UserAccount(self.recipient)
 
     @staticmethod
     def genConfirmationCode(length=4, alphabet='abcdefghjkmnpqrstuvwxyz23456789'):

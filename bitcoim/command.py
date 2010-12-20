@@ -37,15 +37,13 @@ def parse(line):
 class Command(object):
     '''A command that is sent to the component.'''
 
-    def __init__(self, action, arguments=[], target=None, username=''):
-        '''Constructor. action is the command to perform. arguments is an array
-           of words, target is the involved Address if any, and username is
-           the involved username if any.
-        '''
+    def __init__(self, action, arguments=[], target=None):
+        '''Constructor. action is the command to perform. arguments is an
+           array of words or phrases, target is the Addressable object the
+           command is targetted at.'''
         self.action = action.lower()
         self.arguments = arguments
         self.target = target
-        self.username = username
 
     def usage(self):
         """Return an explanation message about how to use the command. Raise an
@@ -67,14 +65,14 @@ class Command(object):
         """Actually execute the command, on behalf of the given user."""
         debug("A command was sent: %s" % self.action)
         if COMMAND_PAY == self.action:
-            if (self.target is None) and (0 == len(self.username)):
+            if self.target is None:
                 raise CommandTargetError, 'You can only send coins to a user or an address.'
             try:
                 amount = self.arguments.pop(0)
             except IndexError:
                 raise CommandSyntaxError, 'You must specify an amount.'
             comment = ' '.join(self.arguments)
-            return self._executePay(user, amount, self.target, self.username, comment)
+            return self._executePay(user, amount, self.target, comment)
         elif COMMAND_CANCEL == self.action:
             try:
                 code = self.arguments.pop(0)
@@ -98,10 +96,10 @@ class Command(object):
         else:
             raise UnknownCommandError, self.action
 
-    def _executePay(self, sender, amount, address, username, comment=''):
+    def _executePay(self, sender, amount, target, comment=''):
         """Called internally. Actually place the payment order in the pending
            list and generate the reply."""
-        debug("Pay order (BTC %s to %s from %s, %s)" % (amount, address, sender, comment))
+        debug("Pay order (BTC %s to %s from %s, %s)" % (amount, target, sender, comment))
         try:
             amount = int(amount)
         except ValueError:
@@ -109,12 +107,12 @@ class Command(object):
         if amount <= 0:
             raise CommandSyntaxError, 'The amount must be positive.'
         try:
-            order = PaymentOrder(sender, address, username, amount, comment)
+            order = PaymentOrder(sender, target, amount, comment)
         except PaymentToSelfError:
             raise CommandSyntaxError, 'You know, I\'m your own address. It doesn\'t make sense.'
         order.queue()
-        info("Payment order valid, queued: %s -> %s/%s (BTC %s, %s)" % \
-             (sender, address, username, amount, order.code))
+        info("Payment order valid, queued: %s -> %s (BTC %s, %s)" % \
+             (sender, target, amount, order.code))
         reply = "You want to pay BTC %s to %s" % (amount, order.recipient)
         if 0 != len(comment):
             reply += ' (%s)' % comment
@@ -159,11 +157,7 @@ class Command(object):
         debug("Payment %s (BTC %s to %s) was cancelled by %s" % \
               (code, payment.amount, payment.recipient, user))
         target = self.target
-        if self.target is not None:
-            target = self.target.address
-        elif 0 != len(self.username):
-            target = self.username
-        if target == payment.recipient:
+        if target == payment.target:
             reply = "Cancelled payment of BTC %s to me" % payment.amount
             if 0 != len(payment.comment):
                 reply += " (%s)" % payment.comment
@@ -203,25 +197,18 @@ class Command(object):
     def _executeListPending(self, user):
         """Called internally. Generate the listing of all pending payments."""
         reply = ''
-        if self.target is not None:
-            label = "Pending payments to this address:"
-            empty = "No pending payments to this address."
-            for row in user.pendingPayments(self.target.address):
-                reply += "\n[%s] (%s): BTC %s" % (row['confirmation_code'], row['date'].date().isoformat(), row['amount'])
-                if 0 != len(row['comment']):
-                    reply += ' (%s)' % row['comment']
-        elif 0 != len(self.username):
-            label = "Pending payments to this user:"
-            empty = "No pending payments to this user."
-            for row in user.pendingPayments(self.username):
-                reply += "\n[%s] (%s): BTC %s" % (row['confirmation_code'], row['date'].date().isoformat(), row['amount'])
-                if 0 != len(row['comment']):
-                    reply += ' (%s)' % row['comment']
-        else:
+        if self.target is None:
             label = "Pending payments:"
             empty = "No pending payments."
             for row in user.pendingPayments():
                 reply += "\n[%s] (%s): BTC %s to %s" % (row['confirmation_code'], row['date'].date().isoformat(), row['amount'], row['recipient'])
+                if 0 != len(row['comment']):
+                    reply += ' (%s)' % row['comment']
+        else:
+            label = "Pending payments to me:"
+            empty = "No pending payments to me."
+            for row in user.pendingPayments(self.target):
+                reply += "\n[%s] (%s): BTC %s" % (row['confirmation_code'], row['date'].date().isoformat(), row['amount'])
                 if 0 != len(row['comment']):
                     reply += ' (%s)' % row['comment']
         if 0 == len(reply):

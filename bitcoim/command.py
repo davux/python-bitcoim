@@ -40,7 +40,7 @@ class Command(object):
         if COMMAND_PAY == self.action:
             return 'pay <amount> [<reason>]\n - <amount> must be a positive number\n - <reason> is a free-form text'
         if COMMAND_CONFIRM == self.action:
-            return 'confirm <code>\n - <code> is the confirmation code of a pending payment'
+            return 'confirm [<code>]\n - <code> is the confirmation code of a pending payment\nIf no code is given, list all pending payments'
         elif COMMAND_HELP == self.action:
             return 'help [<command>]'
         else:
@@ -60,9 +60,9 @@ class Command(object):
         elif COMMAND_CONFIRM == self.action:
             try:
                 code = self.arguments.pop(0)
+                return self._executeConfirm(user, code)
             except IndexError:
-                raise CommandSyntaxError, 'You must give a confirmation code.'
-            return self._executeConfirm(user, code)
+                return self._executeConfirmList(user)
         elif COMMAND_HELP == self.action:
             try:
                 targetCommand = self.arguments.pop(0)
@@ -95,7 +95,7 @@ class Command(object):
             reply += " Note: you only have BTC %d left on your account right now." % sender.getBalance()
         return reply
 
-    def _executeConfirm(self, user, code):
+    def _executeConfirm(self, user, code=None):
         debug("Confirmation attempt from %s (%s)" % (user, code))
         try:
             payment = PaymentOrder(user, code=code)
@@ -115,11 +115,24 @@ class Command(object):
             reply = "Payment done. Transaction ID: %s" % transactionId
         return reply
 
+    def _executeConfirmList(self, user):
+        reply = ''
+        for row in user.pendingPayments():
+            reply += "\n[%s] (%s): BTC %s to %s" % (row['confirmation_code'], row['date'].date().isoformat(), row['amount'], row['recipient'])
+            if 0 != len(row['comment']):
+                reply += ' (%s)' % row['comment']
+        if 0 == len(reply):
+            return "No pending payments."
+        else:
+            return "Pending payments:" + reply
+
     def _executeHelp(self, user, target, command=None):
         if command is None:
             possibleCommands = ['help']
             if (target is not None) and (target.account != user.jid):
                 possibleCommands.extend(['pay', 'confirm'])
+            elif (target is None):
+                possibleCommands.extend(['confirm'])
             reply = 'Possible commands: %s. Type \'help <command>\' for details.' % ', '.join(possibleCommands)
             if target is None:
                 reply += ' You can also type a bitcoin address directly to start a chat.'

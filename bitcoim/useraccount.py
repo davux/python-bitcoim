@@ -241,6 +241,14 @@ class UserAccount(Addressable):
         else:
             self._isAdmin = newValue
 
+    def pendingPayments(self):
+        '''List all pending payments of the user.'''
+        req = "select %s, %s, %s, %s, %s from %s where %s=?" % \
+              ('date', 'recipient', 'amount', 'comment', 'confirmation_code', \
+               'payments', 'from_jid')
+        SQL().execute(req, (self.jid,))
+        return SQL().fetchall()
+
     def discoReceived(self, fromUser, what, node):
         if (fromUser == self) or (fromUser.isAdmin()):
             if fromUser == self:

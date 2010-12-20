@@ -1,3 +1,6 @@
+'''This module contains everything that is related to commands.
+'''
+
 from logging import debug, info
 from paymentorder import PaymentOrder, PaymentError, PaymentNotFoundError, \
                          NotEnoughBitcoinsError, PaymentToSelfError
@@ -8,6 +11,7 @@ COMMAND_CANCEL = 'cancel'
 COMMAND_CONFIRM = 'confirm'
 
 WARNING_LIMIT = 10
+'''The amount above which you will be warned when inserting a payment order'''
 
 def parse(line):
     '''Parse a command line and return a tuple (action, arguments), where
@@ -28,7 +32,7 @@ class Command(object):
     '''A command that is sent to the component.'''
 
     def __init__(self, action, arguments=[], target=None, username=''):
-        '''Constructor. action is the action to perform. arguments is an array
+        '''Constructor. action is the command to perform. arguments is an array
            of words, target is the involved Address if any, and username is
            the involved username if any.
         '''
@@ -38,6 +42,8 @@ class Command(object):
         self.username = username
 
     def usage(self):
+        """Return an explanation message about how to use the command. Raise an
+           exception if the command doesn't exist."""
         if COMMAND_PAY == self.action:
             return 'pay <amount> [<reason>]\n - <amount> must be a positive number\n - <reason> is a free-form text'
         if COMMAND_CANCEL == self.action:
@@ -50,6 +56,7 @@ class Command(object):
             raise UnknownCommandError, self.action
 
     def execute(self, user):
+        """Actually execute the command, on behalf of the given user."""
         debug("A command was sent: %s" % self.action)
         if COMMAND_PAY == self.action:
             if (self.target is None) and (0 == len(self.username)):
@@ -82,6 +89,8 @@ class Command(object):
             raise UnknownCommandError, self.action
 
     def _executePay(self, sender, amount, address, username, comment=''):
+        """Called internally. Actually place the payment order in the pending
+           list and generate the reply."""
         debug("Pay order (BTC %s to %s from %s, %s)" % (amount, address, sender, comment))
         try:
             amount = int(amount)
@@ -105,6 +114,8 @@ class Command(object):
         return reply
 
     def _executeCancel(self, user, code=None):
+        """Called internally. Do the cancellation of a pending payment order
+           and generate the reply."""
         debug("Cancellation attempt from %s (%s)" % (user, code))
         try:
             payment = PaymentOrder(user, code=code)
@@ -134,6 +145,8 @@ class Command(object):
         return reply
 
     def _executeConfirm(self, user, code=None):
+        """Called internally. Do the actual confirmation of a given payment
+           order and generate the reply."""
         debug("Confirmation attempt from %s (%s)" % (user, code))
         try:
             payment = PaymentOrder(user, code=code)
@@ -154,6 +167,7 @@ class Command(object):
         return reply
 
     def _executeListPending(self, user):
+        """Called internally. Generate the listing of all pending payments."""
         reply = ''
         if self.target is not None:
             label = "Pending payments to this address:"
@@ -182,6 +196,8 @@ class Command(object):
             return label + reply
 
     def _executeHelp(self, user, target, command=None):
+        """Called internally. Generate the help message for the given command,
+           or the generic help message if no command was given."""
         if command is None:
             possibleCommands = ['help']
             if (target is not None) and (target.account != user.jid):

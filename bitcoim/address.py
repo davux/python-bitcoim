@@ -62,7 +62,7 @@ class Address(Addressable, BCAddress):
         elif 'owner' == name:
             if self._owner is None: # Wait first call to compute it
                 from useraccount import UserAccount
-                self._owner = UserAccount(JID(self.account))
+                self._owner = UserAccount(JID(node=self.account))
             return self._owner
         else:
             return BCAddress.__getattr__(self, name)

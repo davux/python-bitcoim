@@ -263,7 +263,7 @@ class Component(Addressable, XMPPComponent):
                     debug("A new user is preparing a registration")
                     instructions.setData('After registration, you\'ll get a Bitcoin address that you can use to send and receive payments via Bitcoin.\nYou may also choose a username.')
                 reply = iq.buildReply('result')
-                query = reply.getTag('query')
+                query = reply.getQuery()
                 if registered:
                     query.addChild('registered')
                 query.addChild(node=instructions)
@@ -276,7 +276,7 @@ class Component(Addressable, XMPPComponent):
         elif NS_GATEWAY == ns:
             if 'get' == typ:
                 reply = iq.buildReply('result')
-                query = reply.getTag('query')
+                query = reply.getQuery()
                 query.addChild('desc', payload=['Please enter the Bitcoin contact you would like to add.\nYou may enter a Bitcoin address or an existing username.'])
                 query.addChild('prompt', payload=['Bitcoin address'])
                 cnx.send(reply)
@@ -298,16 +298,14 @@ class Component(Addressable, XMPPComponent):
                             cnx.send(reply)
                             raise NodeProcessed
                     reply = iq.buildReply('result')
-                    query = reply.getTag('query')
+                    query = reply.getQuery()
                     query.addChild(node=jid)
                     cnx.send(reply)
                     raise NodeProcessed
         elif NS_VCARD == ns:
             if 'get' == typ:
                 reply = iq.buildReply('result')
-                query = reply.getTag('vCard')
-                if query is None: # xmpppy bug
-                    query = reply.addChild('vCard', namespace=NS_VCARD)
+                query = reply.getQuery()
                 query.addChild('FN', payload=["%s v%s" % (LIB_NAME, LIB_VERSION)])
                 query.addChild('DESC', payload=[LIB_DESCRIPTION])
                 cnx.send(reply)

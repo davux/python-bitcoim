@@ -62,7 +62,7 @@ class Addressable(object):
             version = Node('version')
             version.setData(LIB_VERSION)
             reply = iq.buildReply('result')
-            query = reply.getTag('query')
+            query = reply.getQuery()
             query.addChild(node=name)
             query.addChild(node=version)
             cnx.send(reply)
@@ -70,7 +70,7 @@ class Addressable(object):
         elif (NS_LAST == ns) and ('get' == typ):
             if self.last is not None:
                 reply = iq.buildReply('result')
-                query = reply.getTag('query')
+                query = reply.getQuery()
                 query.setAttr('seconds', (datetime.now() - self.last).seconds)
                 cnx.send(reply)
                 raise NodeProcessed

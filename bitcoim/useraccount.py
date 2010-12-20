@@ -273,9 +273,7 @@ class UserAccount(Addressable):
         requester = UserAccount(iq.getFrom())
         if NS_VCARD == ns and ('get' == typ):
             reply = iq.buildReply('result')
-            query = reply.getTag('vCard')
-            if query is None: # xmpppy bug
-                query = reply.addChild('vCard', namespace=NS_VCARD)
+            query = reply.getQuery()
             if requester == self or requester.isAdmin():
                 query.addChild('FN', payload=[self.jid])
             if 0 != len(self.username):

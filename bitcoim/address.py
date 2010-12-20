@@ -95,9 +95,7 @@ class Address(Addressable, BCAddress):
         typ = iq.getType()
         if NS_VCARD == ns and ('get' == typ):
             reply = iq.buildReply('result')
-            query = reply.getTag('vCard')
-            if query is None: # xmpppy bug
-                query = reply.addChild('vCard', namespace=NS_VCARD)
+            query = reply.getQuery()
             query.addChild('FN', payload=[self.address])
             #TODO: More generic URL generation
             query.addChild('URL', payload=["http://blockexplorer.com/address/%s" % self.address])

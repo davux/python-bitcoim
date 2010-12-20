@@ -2,7 +2,7 @@
 # vi: sts=4 et sw=4
 
 from logging import info
-from sqlite3 import connect, OperationalError, PARSE_DECLTYPES, PARSE_COLNAMES
+from sqlite3 import connect, OperationalError, Row, PARSE_DECLTYPES, PARSE_COLNAMES
 
 class SQL(object):
     '''
@@ -29,6 +29,7 @@ class SQL(object):
         if (url not in cls.cache):
             cls.cache[url] = object.__new__(cls)
             cls.cache[url].conn = connect(url, isolation_level=None, detect_types=PARSE_DECLTYPES|PARSE_COLNAMES)
+            cls.cache[url].conn.row_factory = Row
             cls.cache[url].cursor = cls.cache[url].conn.cursor()
             cls.cache[url].execute = cls.cache[url].cursor.execute
             cls.cache[url].commit = cls.cache[url].conn.commit

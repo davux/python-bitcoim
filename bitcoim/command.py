@@ -44,7 +44,7 @@ class Command(object):
         elif COMMAND_HELP == self.action:
             return 'help [<command>]'
         else:
-            raise UnknownCommandError
+            raise UnknownCommandError, self.action
 
     def execute(self, user):
         debug("A command was sent: %s" % self.action)
@@ -70,7 +70,7 @@ class Command(object):
                 targetCommand = None
             return self._executeHelp(user, self.target, targetCommand)
         else:
-            raise UnknownCommandError
+            raise UnknownCommandError, self.action
 
     def _executePay(self, sender, amount, address, username, comment=''):
         debug("Pay order (BTC %s to %s from %s, %s)" % (amount, address, sender, comment))

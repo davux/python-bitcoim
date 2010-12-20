@@ -241,12 +241,17 @@ class UserAccount(Addressable):
         else:
             self._isAdmin = newValue
 
-    def pendingPayments(self):
-        '''List all pending payments of the user.'''
+    def pendingPayments(self, recipient=None):
+        '''List all pending payments of the user. If a recipient is given, only
+           list pending payments to that recipient.'''
         req = "select %s, %s, %s, %s, %s from %s where %s=?" % \
               ('date', 'recipient', 'amount', 'comment', 'confirmation_code', \
                'payments', 'from_jid')
-        SQL().execute(req, (self.jid,))
+        values = [self.jid]
+        if recipient is not None:
+            req += " and %s=?" % ('recipient')
+            values.append(recipient)
+        SQL().execute(req, tuple(values))
         return SQL().fetchall()
 
     def discoReceived(self, fromUser, what, node):

@@ -117,14 +117,24 @@ class Command(object):
 
     def _executeConfirmList(self, user):
         reply = ''
-        for row in user.pendingPayments():
-            reply += "\n[%s] (%s): BTC %s to %s" % (row['confirmation_code'], row['date'].date().isoformat(), row['amount'], row['recipient'])
-            if 0 != len(row['comment']):
-                reply += ' (%s)' % row['comment']
-        if 0 == len(reply):
-            return "No pending payments."
+        if self.target is None:
+            label = "Pending payments:"
+            empty = "No pending payments."
+            for row in user.pendingPayments():
+                reply += "\n[%s] (%s): BTC %s to %s" % (row['confirmation_code'], row['date'].date().isoformat(), row['amount'], row['recipient'])
+                if 0 != len(row['comment']):
+                    reply += ' (%s)' % row['comment']
         else:
-            return "Pending payments:" + reply
+            label = "Pending payments to this address:"
+            empty = "No pending payments to this address."
+            for row in user.pendingPayments(self.target.address):
+                reply += "\n[%s] (%s): BTC %s" % (row['confirmation_code'], row['date'].date().isoformat(), row['amount'])
+                if 0 != len(row['comment']):
+                    reply += ' (%s)' % row['comment']
+        if 0 == len(reply):
+            return empty
+        else:
+            return label + reply
 
     def _executeHelp(self, user, target, command=None):
         if command is None:

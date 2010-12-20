@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 # vi: sts=4 et sw=4
 
+from address import Address
 from addressable import Addressable
-from bitcoim.address import Address
-from bitcoim.command import parse as parseCommand, Command
 from bitcoin.controller import Controller
-from logging import debug, info, error
+from command import parse as parseCommand, Command
 from db import SQL
+from jid import JID
+from logging import debug, info, error
 from xmpp.jep0106 import JIDEncode
 from xmpp.protocol import NodeProcessed, NS_DISCO_INFO, NS_DISCO_ITEMS, \
                           NS_VCARD, NS_VERSION
-from jid import JID
 
 FIELD_ID = 'id'
 FIELD_JID = 'registered_jid'

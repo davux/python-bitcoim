@@ -1,11 +1,11 @@
 from bitcoin.address import Address
 from bitcoin.controller import Controller
-from logging import debug, info, warning
 from datetime import datetime
 from db import SQL
 from jsonrpc.proxy import JSONRPCException
-from xmpp import JID
+from logging import debug, info, warning
 import random
+from xmpp import JID
 
 class PaymentOrder(object):
     '''A payment order.'''

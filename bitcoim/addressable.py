@@ -1,6 +1,6 @@
 from bitcoim import LIB_NAME, LIB_VERSION
-from bitcoim.jid import JID
 from bitcoin.address import InvalidBitcoinAddressError
+from jid import JID
 from logging import debug
 from xmpp.jep0106 import JIDDecode
 from xmpp.protocol import NodeProcessed, NS_DISCO_INFO, NS_LAST, NS_VERSION

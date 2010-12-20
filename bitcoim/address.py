@@ -1,8 +1,8 @@
 from addressable import Addressable
 from bitcoin.address import Address as BCAddress
 from command import parse as parseCommand, Command
-from paymentorder import PaymentOrder
 from jid import JID
+from paymentorder import PaymentOrder
 from xmpp.protocol import NodeProcessed, NS_DISCO_INFO, NS_DISCO_ITEMS, \
                           NS_VCARD, NS_VERSION
 

@@ -1,20 +1,21 @@
 # -*- coding: utf-8 -*-
 # vi: sts=4 et sw=4
 
+from address import Address
 from addressable import Addressable, generate as generateAddressable
 from bitcoim import LIB_NAME, LIB_DESCRIPTION, LIB_VERSION
-from bitcoim.address import Address
-from bitcoim.command import Command, parse as parseCommand, COMMAND_HELP, \
-                            CommandSyntaxError, CommandTargetError, \
-                            CommandError, UnknownCommandError
-
 from bitcoin.address import InvalidBitcoinAddressError
 from bitcoin.controller import Controller
+from command import Command, parse as parseCommand, COMMAND_HELP, \
+                    CommandSyntaxError, CommandTargetError, CommandError, \
+                    UnknownCommandError
 from datetime import datetime
 from jid import JID
 from logging import debug, info, warning
-from useraccount import UserAccount, AlreadyRegisteredError, \
-                        UsernameNotAvailableError, UnknownUserError
+from protocol import NS_NICK
+from useraccount import UserAccount, AlreadyRegisteredError, UnknownUserError,\
+                        UsernameNotAvailableError
+from xmpp.browser import Browser
 from xmpp.client import Component as XMPPComponent
 from xmpp.jep0106 import JIDDecode
 from xmpp.protocol import Message, Iq, Presence, NodeProcessed, \
@@ -22,9 +23,7 @@ from xmpp.protocol import Message, Iq, Presence, NodeProcessed, \
                           NS_IQ, NS_MESSAGE, NS_PRESENCE, NS_DISCO_INFO, \
                           NS_DISCO_ITEMS, NS_GATEWAY, NS_REGISTER, \
                           NS_VERSION, NS_LAST, NS_VCARD
-from protocol import NS_NICK
 from xmpp.simplexml import Node
-from xmpp.browser import Browser
 
 class Component(Addressable, XMPPComponent):
     '''The component itself.'''

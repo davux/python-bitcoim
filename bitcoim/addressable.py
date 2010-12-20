@@ -15,8 +15,9 @@ from xmpp.simplexml import Node
 def generate(jid, components, requester):
     '''Generate the appropriate Addressable object depending on the JID given
        as argument. The 'components' argument is a list of component
-       instances to try. If the requester is an admin , allow resolution of
-       the entity as a JID, otherwise only look it up as a username. '''
+       instances to try. If the requester is an admin or is asking about its
+       own hosted JID, allow resolution of the entity as a JID, otherwise only
+       look it up as a username. '''
     from address import Address
     from useraccount import UserAccount, UnknownUserError
     for component in components:
@@ -27,7 +28,8 @@ def generate(jid, components, requester):
     except InvalidBitcoinAddressError:
         try:
             jidprefix = JIDDecode(jid.getNode())
-            if requester.isAdmin() and (0 <= jidprefix.find('.')):
+            if (requester.isAdmin() or (jidprefix == requester.jid)) \
+               and (0 <= jidprefix.find('.')):
                 # Treat as JID, and must be registered
                 return UserAccount(JID(jidprefix), True)
             else:

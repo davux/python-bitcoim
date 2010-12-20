@@ -12,11 +12,11 @@ from xmpp.simplexml import Node
    component.
 '''
 
-def generate(jid, components, onlyUsernames=True):
+def generate(jid, components, requester):
     '''Generate the appropriate Addressable object depending on the JID given
        as argument. The 'components' argument is a list of component
-       instances to try. The 'onlyUsername' attribute determines whether the
-       node part of the JID can represent a full JID or only a username. '''
+       instances to try. If the requester is an admin , allow resolution of
+       the entity as a JID, otherwise only look it up as a username. '''
     from address import Address
     from useraccount import UserAccount, UnknownUserError
     for component in components:
@@ -27,12 +27,12 @@ def generate(jid, components, onlyUsernames=True):
     except InvalidBitcoinAddressError:
         try:
             jidprefix = JIDDecode(jid.getNode())
-            if onlyUsernames or (-1 == jidprefix.find('.')):
-                # Treat as username
-                return UserAccount(jidprefix)
-            else:
+            if requester.isAdmin() and (0 <= jidprefix.find('.')):
                 # Treat as JID, and must be registered
                 return UserAccount(JID(jidprefix), True)
+            else:
+                # Treat as username
+                return UserAccount(jidprefix)
         except UnknownUserError:
             return None
 

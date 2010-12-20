@@ -77,7 +77,7 @@ class Component(Addressable, XMPPComponent):
            additionally query them from their real JID, in any case.
         '''
         fromUser = UserAccount(iq.getFrom())
-        target = generateAddressable(iq.getTo(), [self], not fromUser.isAdmin())
+        target = generateAddressable(iq.getTo(), [self], fromUser)
         if target is not None:
             return target.discoReceived(fromUser, what, iq.getQuerynode())
         # otherwise the default handler will send a "not supported" error
@@ -85,7 +85,7 @@ class Component(Addressable, XMPPComponent):
     def iqHandler(self, cnx, iq):
         '''IQ received'''
         fromUser = UserAccount(iq.getFrom())
-        target = generateAddressable(iq.getTo(), [self], not fromUser.isAdmin())
+        target = generateAddressable(iq.getTo(), [self], fromUser)
         if target is not None:
             return target.iqReceived(cnx, iq)
         # otherwise the default handler will send a "not supported" error
@@ -93,7 +93,7 @@ class Component(Addressable, XMPPComponent):
     def messageHandler(self, cnx, msg):
         '''Message received'''
         fromUser = UserAccount(msg.getFrom())
-        target = generateAddressable(msg.getTo(), [self], not fromUser.isAdmin())
+        target = generateAddressable(msg.getTo(), [self], fromUser)
         if target is not None:
             try:
                 return target.messageReceived(cnx, msg)
@@ -120,7 +120,7 @@ class Component(Addressable, XMPPComponent):
         fromUser = UserAccount(prs.getFrom())
         if not fromUser.isRegistered():
             return #TODO: Send a registration-required error
-        target = generateAddressable(prs.getTo(), [self], not fromUser.isAdmin())
+        target = generateAddressable(prs.getTo(), [self], fromUser)
         if target is not None:
             return target.presenceReceived(cnx, prs)
         # otherwise the default handler will send a "not supported" error

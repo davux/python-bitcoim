@@ -1,5 +1,6 @@
 from addressable import Addressable
 from bitcoin.address import Address as BCAddress
+from command import parse as parseCommand, Command
 from paymentorder import PaymentOrder
 from jid import JID
 from xmpp.protocol import NodeProcessed, NS_DISCO_INFO, NS_DISCO_ITEMS, \
@@ -103,6 +104,15 @@ class Address(Addressable, BCAddress):
             cnx.send(reply)
             raise NodeProcessed
         Addressable.iqReceived(self, cnx, iq)
+
+    def messageReceived(self, cnx, msg):
+        from useraccount import UserAccount
+        (action, args) = parseCommand(msg.getBody())
+        command = Command(action, args, self)
+        msg = msg.buildReply(command.execute(UserAccount(msg.getFrom())))
+        msg.setType('chat')
+        cnx.send(msg)
+        raise NodeProcessed
 
 
 class CommandSyntaxError(Exception):

@@ -92,6 +92,29 @@ class Component(Addressable, XMPPComponent):
             return target.iqReceived(cnx, iq)
         # otherwise the default handler will send a "not supported" error
 
+    def messageHandler(self, cnx, msg):
+        '''Message received'''
+        fromUser = UserAccount(msg.getFrom())
+        target = generateAddressable(msg.getTo(), [self], not fromUser.isAdmin())
+        if target is not None:
+            try:
+                return target.messageReceived(cnx, msg)
+            except CommandTargetError, reason:
+                error = reason
+            except UnknownCommandError, command:
+                error = ('Unknown command \'%s\'. Type \'%s\' for a ' \
+                         + 'list of accepted commands.') \
+                        % (command, COMMAND_HELP)
+            except CommandSyntaxError, reason:
+                error = reason
+            except CommandError, reason:
+                error = reason
+            msg = msg.buildReply("Error: %s" % error)
+            msg.setType('error')
+            cnx.send(msg)
+            raise NodeProcessed
+        # otherwise the default handler will send a "not supported" error
+
     def sayGoodbye(self):
         '''Ending method. Doesn't do anything interesting yet.'''
         message = 'Service is shutting down. See you later.'
@@ -166,66 +189,24 @@ class Component(Addressable, XMPPComponent):
                         items.append({'jid': contact.getLocalJID(), 'name': name})
             return items
 
-    def messageHandler(self, cnx, msg):
-        '''Message received'''
-        error = None
+    def messageReceived(self, cnx, msg):
+        '''Message received, addressed to the component. The command execution
+           can raise exceptions, but those will be taken care of by the
+           caller (messageHandler())'''
         user = UserAccount(msg.getFrom())
-        debug("Received message from %s" % user)
-        if not user.isRegistered():
+        if user.isRegistered():
+            try:
+                address = Address(msg.getBody())
+                msg = Message(to=msg.getFrom(), frm=address.jid,\
+                      body='I\'m %s. Talk to me.' % address, typ='chat')
+            except InvalidBitcoinAddressError:
+                (action, args) = parseCommand(msg.getBody())
+                msg = msg.buildReply(Command(action, args).execute(user))
+                msg.setType('chat')
+                if user.checkBalance() is not None:
+                    self.sendBitcoinPresence(user)
+        else:
             error = "You're not registered. Please register, it's free!"
-        else:
-            if self.jid == msg.getTo().getStripped():
-                try:
-                    address = Address(msg.getBody())
-                    msg = Message(to=msg.getFrom(), frm=address.jid,\
-                          body='I\'m %s. Talk to me.' % address, typ='chat')
-                    cnx.send(msg)
-                    raise NodeProcessed
-                except InvalidBitcoinAddressError:
-                    try:
-                        (action, args) = parseCommand(msg.getBody())
-                        reply = Command(action, args).execute(user)
-                    except CommandTargetError:
-                        error = 'This command only works with an address'
-                    except UnknownCommandError:
-                        error = ('Unknown command \'%s\'. Type \'%s\' for a ' \
-                                 + 'list of accepted commands.') \
-                                % (action, COMMAND_HELP)
-                    except CommandSyntaxError, reason:
-                        error = reason
-                    except CommandError, reason:
-                        error = reason
-            else:
-                try:
-                    try:
-                        address = Address(msg.getTo())
-                        (action, args) = parseCommand(msg.getBody())
-                        reply = Command(action, args, address).execute(user)
-                    except InvalidBitcoinAddressError:
-                        # From node to JID back to username: This has the
-                        # double advantage to normalize the username and check
-                        # whether it exists.
-                        username = UserAccount(JIDDecode(msg.getTo().getNode())).username
-                        (action, args) = parseCommand(msg.getBody())
-                        reply = Command(action, args, username=username).execute(user)
-                except UnknownUserError:
-                    error = 'This is not a valid user or bitcoin address.'
-                except CommandTargetError:
-                    error = 'This command only works with the gateway'
-                except UnknownCommandError:
-                    error = ('Unknown command \'%s\'. Type \'%s\' for a ' \
-                             + 'list of accepted commands.') \
-                            % (action, COMMAND_HELP)
-                except CommandSyntaxError, reason:
-                    error = reason
-                except CommandError, reason:
-                    error = reason
-        if error is None:
-            msg = msg.buildReply(reply)
-            msg.setType('chat')
-            if user.checkBalance() is not None:
-                self.sendBitcoinPresence(user)
-        else:
             msg = msg.buildReply("Error: %s" % error)
             msg.setType('error')
         cnx.send(msg)

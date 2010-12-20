@@ -3,6 +3,7 @@
 
 from addressable import Addressable
 from bitcoim.address import Address
+from bitcoim.command import parse as parseCommand, Command
 from bitcoin.controller import Controller
 from logging import debug, info, error
 from db import SQL
@@ -282,6 +283,14 @@ class UserAccount(Addressable):
             cnx.send(reply)
             raise NodeProcessed
         Addressable.iqReceived(self, cnx, iq)
+
+    def messageReceived(self, cnx, msg):
+        (action, args) = parseCommand(msg.getBody())
+        command = Command(action, args, username=self.username)
+        msg = msg.buildReply(command.execute(UserAccount(msg.getFrom())))
+        msg.setType('chat')
+        cnx.send(msg)
+        raise NodeProcessed
 
 
 class AlreadyRegisteredError(Exception):

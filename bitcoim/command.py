@@ -1,14 +1,20 @@
+# vim: set fileencoding=utf-8 :
+
 '''This module contains everything that is related to commands.
 '''
 
+from bitcoin.transaction import CATEGORY_MOVE, CATEGORY_SEND
+from jid import JID
 from logging import debug, info
 from paymentorder import PaymentOrder, PaymentError, PaymentNotFoundError, \
                          NotEnoughBitcoinsError, PaymentToSelfError
+from useraccount import UserAccount
 
 COMMAND_HELP = 'help'
 COMMAND_PAY = 'pay'
 COMMAND_CANCEL = 'cancel'
 COMMAND_CONFIRM = 'confirm'
+COMMAND_PAID = 'paid'
 
 WARNING_LIMIT = 10
 '''The amount above which you will be warned when inserting a payment order'''
@@ -46,6 +52,8 @@ class Command(object):
            exception if the command doesn't exist."""
         if COMMAND_PAY == self.action:
             return 'pay <amount> [<reason>]\n - <amount> must be a positive number\n - <reason> is a free-form text'
+        if COMMAND_PAID == self.action:
+            return 'paid\nList past payments'
         if COMMAND_CANCEL == self.action:
             return 'cancel [<code>]\n - <code> is the confirmation code of a pending payment\nIf no code is given, list all pending payments'
         if COMMAND_CONFIRM == self.action:
@@ -85,6 +93,8 @@ class Command(object):
             except IndexError:
                 targetCommand = None
             return self._executeHelp(user, self.target, targetCommand)
+        elif COMMAND_PAID == self.action:
+            return self._executePaid(user)
         else:
             raise UnknownCommandError, self.action
 
@@ -111,6 +121,30 @@ class Command(object):
         reply += ". Please confirm by typing: 'confirm %s'." % order.code
         if sender.getBalance() - amount < WARNING_LIMIT:
             reply += " Note: you only have BTC %d left on your account right now." % sender.getBalance()
+        return reply
+
+    def _executePaid(self, user):
+        """Called internally. List the past outgoing transactions made by the
+           user. The command behaves the same whatever the target (for now)."""
+        reply = ''
+        for payment in user.pastPayments():
+            if payment.category in [CATEGORY_SEND, CATEGORY_MOVE]:
+                reply += "\nBTC %s" % abs(payment.amount)
+                if payment.otheraccount is not None:
+                    recipient = UserAccount(JID(payment.otheraccount))
+                    if user.isAdmin() or (0 != len(recipient.username)):
+                        reply += " to %s" % recipient.getLabel()
+                    else:
+                        reply += " to another user who became invisible since then"
+                if payment.message is not None:
+                    reply += " (%s)" % payment.message
+                confirmations = payment.confirmations
+                if 0 <= confirmations:
+                    reply += " – %s confirmations" % payment.confirmations
+        if 0 == len(reply):
+            reply = "You didn't send any coins"
+        else:
+            reply = "You paid:%s" % reply
         return reply
 
     def _executeCancel(self, user, code=None):
@@ -199,7 +233,7 @@ class Command(object):
         """Called internally. Generate the help message for the given command,
            or the generic help message if no command was given."""
         if command is None:
-            possibleCommands = ['help']
+            possibleCommands = ['help', 'paid']
             if (target is not None) and (target.account != user.jid):
                 possibleCommands.extend(['pay', 'confirm', 'cancel'])
             elif (target is None):

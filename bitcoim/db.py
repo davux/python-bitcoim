@@ -2,7 +2,7 @@
 # vi: sts=4 et sw=4
 
 from logging import info
-from sqlite3 import connect, OperationalError
+from sqlite3 import connect, OperationalError, PARSE_DECLTYPES, PARSE_COLNAMES
 
 class SQL(object):
     '''
@@ -28,7 +28,7 @@ class SQL(object):
                 return None
         if (url not in cls.cache):
             cls.cache[url] = object.__new__(cls)
-            cls.cache[url].conn = connect(url, isolation_level=None)
+            cls.cache[url].conn = connect(url, isolation_level=None, detect_types=PARSE_DECLTYPES|PARSE_COLNAMES)
             cls.cache[url].cursor = cls.cache[url].conn.cursor()
             cls.cache[url].execute = cls.cache[url].cursor.execute
             cls.cache[url].commit = cls.cache[url].conn.commit
@@ -86,7 +86,7 @@ class Database(object):
                 req = '''CREATE TABLE IF NOT EXISTS payments (
                          id INTEGER NOT NULL,
                          from_jid varchar(256) NOT NULL,
-                         date datetime NOT NULL,
+                         date timestamp NOT NULL,
                          recipient varchar(256) NOT NULL,
                          amount real NOT NULL,
                          comment varchar(256) NOT NULL,

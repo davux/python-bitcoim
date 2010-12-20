@@ -1,6 +1,5 @@
 from addressable import Addressable
 from bitcoin.address import Address as BCAddress
-from command import parse as parseCommand, Command
 from jid import JID
 from paymentorder import PaymentOrder
 from xmpp.protocol import Presence, NodeProcessed, NS_VCARD, NS_VERSION, \
@@ -104,6 +103,7 @@ class Address(Addressable, BCAddress):
         Addressable.iqReceived(self, cnx, iq)
 
     def messageReceived(self, cnx, msg):
+        from command import parse as parseCommand, Command
         from useraccount import UserAccount
         (action, args) = parseCommand(msg.getBody())
         command = Command(action, args, self)

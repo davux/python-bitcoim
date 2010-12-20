@@ -4,7 +4,7 @@
 from address import Address
 from addressable import Addressable
 from bitcoin.controller import Controller
-from command import parse as parseCommand, Command
+from bitcoin.transaction import Transaction
 from db import SQL
 from jid import JID
 from logging import debug, info, error, warning
@@ -296,6 +296,7 @@ class UserAccount(Addressable):
         Addressable.iqReceived(self, cnx, iq)
 
     def messageReceived(self, cnx, msg):
+        from command import parse as parseCommand, Command
         (action, args) = parseCommand(msg.getBody())
         command = Command(action, args, username=self.username)
         msg = msg.buildReply(command.execute(UserAccount(msg.getFrom())))

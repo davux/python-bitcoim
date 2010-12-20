@@ -65,13 +65,13 @@ class Command(object):
                 code = self.arguments.pop(0)
                 return self._executeCancel(user, code)
             except IndexError:
-                return self._executeConfirmList(user)
+                return self._executeListPending(user)
         elif COMMAND_CONFIRM == self.action:
             try:
                 code = self.arguments.pop(0)
                 return self._executeConfirm(user, code)
             except IndexError:
-                return self._executeConfirmList(user)
+                return self._executeListPending(user)
         elif COMMAND_HELP == self.action:
             try:
                 targetCommand = self.arguments.pop(0)
@@ -153,7 +153,7 @@ class Command(object):
             reply = "Payment done. Transaction ID: %s" % transactionId
         return reply
 
-    def _executeConfirmList(self, user):
+    def _executeListPending(self, user):
         reply = ''
         if self.target is not None:
             label = "Pending payments to this address:"

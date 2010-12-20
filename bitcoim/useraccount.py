@@ -254,6 +254,27 @@ class UserAccount(Addressable):
         SQL().execute(req, tuple(values))
         return SQL().fetchall()
 
+    def pastPayments(self, count=None):
+        '''List all past payments (known to the wallet) for this account.'''
+        if count is None:
+            items = Controller().listtransactions(self.jid)
+        else:
+            items = Controller().listtransactions(self.jid, count)
+        payments = []
+        for item in items:
+            debug("Listtransactions says %s" % item)
+            if 'txid' in item:
+                payment = Transaction(item['txid'])
+                payment.read()
+            else:
+                payment = Transaction(amount=item['amount'], \
+                                      message=item.get('message'), \
+                                      fee=item.get('fee', 0), \
+                                      otheraccount=item.get('otheraccount'))
+            payment.category = item['category']
+            payments.append(payment)
+        return payments
+
     def discoReceived(self, fromUser, what, node):
         if (fromUser == self) or (fromUser.isAdmin()):
             if fromUser == self:

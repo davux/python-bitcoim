@@ -15,7 +15,7 @@ from xmpp.simplexml import Node
 def generate(jid, components, onlyUsernames=True):
     '''Generate the appropriate Addressable object depending on the JID given
        as argument. The 'components' argument is a list of component
-       instances to try. The 'onlyUsername' attributes determines whether the
+       instances to try. The 'onlyUsername' attribute determines whether the
        node part of the JID can represent a full JID or only a username. '''
     from address import Address
     from useraccount import UserAccount, UnknownUserError

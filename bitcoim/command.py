@@ -50,7 +50,7 @@ class Command(object):
         debug("A command was sent: %s" % self.action)
         if COMMAND_PAY == self.action:
             if (self.target is None) and (0 == len(self.username)):
-                raise CommandTargetError
+                raise CommandTargetError, 'You can only send coins to a user or an address.'
             try:
                 amount = self.arguments.pop(0)
             except IndexError:

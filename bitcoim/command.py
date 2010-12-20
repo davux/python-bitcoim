@@ -4,6 +4,7 @@ from paymentorder import PaymentOrder, PaymentError, PaymentNotFoundError, \
 
 COMMAND_HELP = 'help'
 COMMAND_PAY = 'pay'
+COMMAND_CANCEL = 'cancel'
 COMMAND_CONFIRM = 'confirm'
 
 WARNING_LIMIT = 10
@@ -39,6 +40,8 @@ class Command(object):
     def usage(self):
         if COMMAND_PAY == self.action:
             return 'pay <amount> [<reason>]\n - <amount> must be a positive number\n - <reason> is a free-form text'
+        if COMMAND_CANCEL == self.action:
+            return 'cancel [<code>]\n - <code> is the confirmation code of a pending payment\nIf no code is given, list all pending payments'
         if COMMAND_CONFIRM == self.action:
             return 'confirm [<code>]\n - <code> is the confirmation code of a pending payment\nIf no code is given, list all pending payments'
         elif COMMAND_HELP == self.action:
@@ -57,6 +60,12 @@ class Command(object):
                 raise CommandSyntaxError, 'You must specify an amount.'
             comment = ' '.join(self.arguments)
             return self._executePay(user, amount, self.target, self.username, comment)
+        elif COMMAND_CANCEL == self.action:
+            try:
+                code = self.arguments.pop(0)
+                return self._executeCancel(user, code)
+            except IndexError:
+                return self._executeConfirmList(user)
         elif COMMAND_CONFIRM == self.action:
             try:
                 code = self.arguments.pop(0)
@@ -93,6 +102,35 @@ class Command(object):
         reply += ". Please confirm by typing: 'confirm %s'." % order.code
         if sender.getBalance() - amount < WARNING_LIMIT:
             reply += " Note: you only have BTC %d left on your account right now." % sender.getBalance()
+        return reply
+
+    def _executeCancel(self, user, code=None):
+        debug("Cancellation attempt from %s (%s)" % (user, code))
+        try:
+            payment = PaymentOrder(user, code=code)
+        except PaymentNotFoundError:
+            raise CommandError, 'No payment was found with code \'%s\'' % code
+        payment.cancel()
+        debug("Payment %s (BTC %s to %s) was cancelled by %s" % \
+              (code, payment.amount, payment.recipient, user))
+        target = self.target
+        if self.target is not None:
+            target = self.target.address
+        elif 0 != len(self.username):
+            target = self.username
+        if target == payment.recipient:
+            reply = "Cancelled payment of BTC %s to me" % payment.amount
+            if 0 != len(payment.comment):
+                reply += " (%s)" % payment.comment
+            reply += ". Too bad!"
+        else:
+            reply = "Cancelled payment of BTC %s to %s" % (payment.amount, payment.recipient)
+            if 0 != len(payment.comment):
+                reply += " (%s)" % payment.comment
+            if target is None:
+                reply += ". Warning: It's better to cancel a payment from its recipient."
+            else:
+                reply += ". Warning: The payment was not to me. Since you gave the right code I cancelled it anyway."
         return reply
 
     def _executeConfirm(self, user, code=None):
@@ -147,9 +185,9 @@ class Command(object):
         if command is None:
             possibleCommands = ['help']
             if (target is not None) and (target.account != user.jid):
-                possibleCommands.extend(['pay', 'confirm'])
+                possibleCommands.extend(['pay', 'confirm', 'cancel'])
             elif (target is None):
-                possibleCommands.extend(['confirm'])
+                possibleCommands.extend(['confirm', 'cancel'])
             reply = 'Possible commands: %s. Type \'help <command>\' for details.' % ', '.join(possibleCommands)
             if target is None:
                 reply += ' You can also type a bitcoin address directly to start a chat.'

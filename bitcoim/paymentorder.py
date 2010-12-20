@@ -103,11 +103,14 @@ class PaymentOrder(object):
             raise NotEnoughBitcoinsError
         info("Payment made by %s to %s (BTC %s). Comment: %s" % \
               (self.sender, self.recipient, self.amount, self.comment))
-        self.date = datetime.now()
+        self.cancel()
+        return self.code
+
+    def cancel(self):
+        '''Delete the payment order from the database.'''
         debug("About to delete payment order #%s" % self.entryId)
         req = 'delete from %s where %s=?' % ('payments', 'id')
         SQL().execute(req, (self.entryId,))
-        return self.code
 
 class PaymentNotFoundError(Exception):
     '''The requested payment was not found.'''

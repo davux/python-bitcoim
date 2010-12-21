@@ -126,23 +126,33 @@ class Command(object):
            user. The command behaves the same whatever the target (for now)."""
         reply = ''
         for payment in user.pastPayments():
-            if payment.category in [CATEGORY_SEND, CATEGORY_MOVE]:
-                reply += "\nBTC %s" % abs(payment.amount)
-                if payment.otheraccount is not None:
-                    recipient = UserAccount(JID(payment.otheraccount))
+            if payment.category not in [CATEGORY_SEND, CATEGORY_MOVE]:
+                continue
+            if self.target is not None and (self.target.jid != payment.otheraccount):
+                continue
+            reply += "\nBTC %s" % abs(payment.amount)
+            if payment.otheraccount is not None:
+                recipient = UserAccount(JID(payment.otheraccount))
+                if recipient != self.target:
                     if user.isAdmin() or (0 != len(recipient.username)):
                         reply += " to %s" % recipient.getLabel()
                     else:
                         reply += " to another user who became invisible since then"
-                if payment.message is not None:
-                    reply += " (%s)" % payment.message
-                confirmations = payment.confirmations
-                if 0 <= confirmations:
-                    reply += " – %s confirmations" % payment.confirmations
+            if payment.message is not None:
+                reply += " (%s)" % payment.message
+            confirmations = payment.confirmations
+            if 0 <= confirmations:
+                reply += " – %s confirmations" % payment.confirmations
         if 0 == len(reply):
-            reply = "You didn't send any coins"
+            if self.target is None:
+                reply = "You didn't send any coins"
+            else:
+                reply = "You didn't send me any coins"
         else:
-            reply = "You paid:%s" % reply
+            if self.target is None:
+                reply = "You paid:%s" % reply
+            else:
+                reply = "You paid me:%s" % reply
         return reply
 
     def _executeCancel(self, user, code=None):

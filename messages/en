@@ -1,1 +1,5 @@
 # This is the reference language file. It contains all the messages.
+
+[Console]
+cannot_connect = Unable to connect to {server}:{port}
+cannot_auth = Unable to authenticate as {jid}

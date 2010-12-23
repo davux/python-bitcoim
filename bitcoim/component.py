@@ -10,6 +10,7 @@ from command import Command, parse as parseCommand, COMMAND_HELP, \
                     CommandSyntaxError, CommandTargetError, CommandError, \
                     UnknownCommandError
 from datetime import datetime
+from i18n import _
 from jid import JID
 from logging import debug, info, warning
 from useraccount import UserAccount, AlreadyRegisteredError, UnknownUserError,\
@@ -45,9 +46,9 @@ class Component(Addressable, XMPPComponent):
 
     def start(self, proxy=None):
         if not self.connect(None, proxy):
-            raise Exception('Unable to connect to %s:%s' % (server, port))
+            raise Exception(_('Console', 'cannot_connect').format(server=self.Server, port=self.Port))
         if not self.auth(self.jid, self.password):
-            raise Exception('Unable to authenticate as %s' % (jid))
+            raise Exception(_('Console', 'cannot_auth').format(jid=self.jid))
         self._RegisterHandlers()
         debug("Sending initial presence to all contacts...")
         for jid in UserAccount.getAllContacts():

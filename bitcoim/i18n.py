@@ -5,6 +5,10 @@ from os.path import join as j
 from os import sep
 from sys import prefix
 
+COMMANDS = 'Commands'
+DISCO = 'Service discovery'
+ROSTER = 'Roster interaction'
+
 _paths = []
 for dir in [j(prefix, 'share'), j(prefix, 'local', 'share'), j(sep, 'etc')]:
     _paths.append(j(dir, 'bitcoim', 'messages'))

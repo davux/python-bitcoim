@@ -10,7 +10,7 @@ from command import Command, parse as parseCommand, COMMAND_HELP, \
                     CommandSyntaxError, CommandTargetError, CommandError, \
                     UnknownCommandError
 from datetime import datetime
-from i18n import _
+from i18n import _, COMMANDS, DISCO, ROSTER
 from jid import JID
 from logging import debug, info, warning
 from useraccount import UserAccount, AlreadyRegisteredError, UnknownUserError,\
@@ -101,14 +101,13 @@ class Component(Addressable, XMPPComponent):
             except CommandTargetError, reason:
                 error = reason
             except UnknownCommandError, command:
-                error = ('Unknown command \'%s\'. Type \'%s\' for a ' \
-                         + 'list of accepted commands.') \
-                        % (command, COMMAND_HELP)
+                error = (_(COMMANDS, 'unknown_command').format(command=command))
             except CommandSyntaxError, reason:
                 error = reason
             except CommandError, reason:
                 error = reason
-            msg = msg.buildReply("Error: %s" % error)
+            msg = msg.buildReply(_(COMMANDS, 'error_message').format(\
+                                   message=error))
             msg.setType('error')
             cnx.send(msg)
             raise NodeProcessed
@@ -144,15 +143,15 @@ class Component(Addressable, XMPPComponent):
         if 0 == len(username):
             status = ''
         else:
-            status = 'Hi %s! ' % username
-        status += 'Current balance: BTC %s' % user.getBalance()
+            status = _(ROSTER, 'hello_nick').format(nick=username)
+        status += _(ROSTER, 'current_balance').format(amount=user.getBalance())
         self.send(Presence(to=user.jid, typ='available', show='online', status=status, frm=self.jid))
 
     def addAddressToRoster(self, address, user):
         '''Add the JID corresponding to a given bitcoin address to user's
            roster. The suggested name is the bitcoin address.'''
         debug("Adding address %s to %s's roster")
-        msg = 'Hi! I\'m your new Bitcoin address'
+        msg = _(ROSTER, 'new_address_message')
         pres = Presence(typ='subscribe', status=msg, frm=address.jid, to=user.jid)
         pres.addChild('nick', payload=[address.address], namespace=NS_NICK)
         self.send(pres)
@@ -164,13 +163,13 @@ class Component(Addressable, XMPPComponent):
                         'name':LIB_DESCRIPTION}]
                 return {'ids': ids, 'features': [NS_DISCO_INFO, NS_DISCO_ITEMS, NS_REGISTER, NS_VERSION, NS_GATEWAY, NS_LAST]}
             elif 'users' == node:
-                ids = [{'category': 'directory', 'type': 'user', 'name': 'Users'}]
+                ids = [{'category': 'directory', 'type': 'user', 'name': _(DISCO, 'user_list')}]
                 return {'ids': ids, 'features': [NS_DISCO_INFO, NS_DISCO_ITEMS]}
         elif 'items' == what:
             items = []
             if user.isRegistered():
                 if node is None:
-                    items.append({'jid': user.getLocalJID(), 'name': 'Your addresses', 'node': 'addresses'})
+                    items.append({'jid': user.getLocalJID(), 'name': _(DISCO, 'your_addresses'), 'node': 'addresses'})
             else:
                 items.append({'jid': self.jid, 'name': LIB_DESCRIPTION})
             if user.isAdmin():
@@ -195,7 +194,7 @@ class Component(Addressable, XMPPComponent):
             try:
                 address = Address(msg.getBody())
                 msg = Message(to=msg.getFrom(), frm=address.jid,\
-                      body='I\'m %s. Talk to me.' % address, typ='chat')
+                      body=_(ROSTER, 'address_start_chat').format(address=address), typ='chat')
             except InvalidBitcoinAddressError:
                 (action, args) = parseCommand(msg.getBody())
                 msg = msg.buildReply(Command(action, args).execute(user))
@@ -203,8 +202,8 @@ class Component(Addressable, XMPPComponent):
                 if user.checkBalance() is not None:
                     self.sendBitcoinPresence(cnx, user)
         else:
-            error = "You're not registered. Please register, it's free!"
-            msg = msg.buildReply("Error: %s" % error)
+            error = _(REGISTRATION, 'error_not_registered')
+            msg = msg.buildReply(_(COMMANDS, 'error_message').format(message=error))
             msg.setType('error')
         cnx.send(msg)
         raise NodeProcessed
@@ -257,11 +256,11 @@ class Component(Addressable, XMPPComponent):
                 user = UserAccount(iq.getFrom())
                 registered = user.isRegistered()
                 if registered:
-                    instructions.setData('You may set/change your username if you wish.')
+                    instructions.setData(_(REGISTRATION, 'set_username'))
                     username.setData(user.username)
                 else:
                     debug("A new user is preparing a registration")
-                    instructions.setData('After registration, you\'ll get a Bitcoin address that you can use to send and receive payments via Bitcoin.\nYou may also choose a username.')
+                    instructions.setData(_(REGISTRATION, 'instructions'))
                 reply = iq.buildReply('result')
                 query = reply.getQuery()
                 if registered:
@@ -277,8 +276,8 @@ class Component(Addressable, XMPPComponent):
             if 'get' == typ:
                 reply = iq.buildReply('result')
                 query = reply.getQuery()
-                query.addChild('desc', payload=['Please enter the Bitcoin contact you would like to add.\nYou may enter a Bitcoin address or an existing username.'])
-                query.addChild('prompt', payload=['Bitcoin address'])
+                query.addChild('desc', payload=[_(ROSTER, 'address2jid_description')])
+                query.addChild('prompt', payload=[_(ROSTER, 'address2jid_prompt')])
                 cnx.send(reply)
                 raise NodeProcessed
             elif 'set' == typ:
@@ -294,7 +293,7 @@ class Component(Addressable, XMPPComponent):
                             jid.setData(UserAccount(prompt).getLocalJID())
                         except UnknownUserError:
                             reply = iq.buildReply(typ='error')
-                            reply.addChild(node=ErrorNode('item-not-found', 404, 'cancel', 'You must give an existing username or a Bitcoin address.'))
+                            reply.addChild(node=ErrorNode('item-not-found', 404, 'cancel', _(ROSTER, 'address2jid_invalid')))
                             cnx.send(reply)
                             raise NodeProcessed
                     reply = iq.buildReply('result')
@@ -350,7 +349,7 @@ class Component(Addressable, XMPPComponent):
         info("Registration request from %s" % frm)
         if -1 == frm.getStripped().find('.'):
             reply = iq.buildReply(typ='error')
-            reply.addChild(node=ErrorNode('not-acceptable', 500, 'cancel', 'Your JID must contain a dot. That\'s the rule.'))
+            reply.addChild(node=ErrorNode('not-acceptable', 500, 'cancel', _(REGISTRATION, 'error_invalid_jid')))
             self.send(reply)
             warning("Possible hacking attempt: JID '%s' (no dot!) tried to register to the gateway." % frm.getStripped())
             return
@@ -366,7 +365,7 @@ class Component(Addressable, XMPPComponent):
             info("%s changed username to '%s'" % (user, user.username))
         except UsernameNotAvailableError:
             reply = iq.buildReply(typ='error')
-            reply.addChild(node=ErrorNode('not-acceptable', 406, 'modify', 'This username is invalid or not available'))
+            reply.addChild(node=ErrorNode('not-acceptable', 406, 'modify', _(REGISTRATION, 'error_invalid_username')))
             self.send(reply)
             return
         try:
@@ -391,4 +390,4 @@ class Component(Addressable, XMPPComponent):
         self.send(iq.buildReply('result'))
         self.send(Presence(to=user.jid, frm=self.jid, typ='unsubscribe'))
         self.send(Presence(to=user.jid, frm=self.jid, typ='unsubscribed'))
-        self.send(Presence(to=user.jid, frm=self.jid, typ='unavailable', status='Thanks for using this service. Bye!'))
+        self.send(Presence(to=user.jid, frm=self.jid, typ='unavailable', status=_(REGISTRATION, 'bye')))

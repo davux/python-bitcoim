@@ -3,3 +3,32 @@
 [Console]
 cannot_connect = Unable to connect to {server}:{port}
 cannot_auth = Unable to authenticate as {jid}
+
+[Commands]
+command_help = help
+unknown_command = Unknown command {command}. Type '%(command_help)s' for a list of accepted commands.
+error_message = Error: {message}
+
+[Roster interaction]
+hello_nick = Hi {nick}!
+current_balance = Current balance: %(bitcoins)s
+new_address_message = Hi! I'm your new Bitcoin address.
+address_start_chat = I'm {address}. Talk to me.
+address2jid_description = Please enter the Bitcoin contact you would like to add.\nYou may enter a Bitcoin address or an existing username.
+address2jid_prompt = Bitcoin address
+address2jid_invalid = You must give an existing username or a Bitcoin address.
+
+[Registration]
+error_invalid_jid = Your JID must contain a dot. That's the rule.
+error_invalid_username = This username is invalid or not available.
+error_not_registered = You're not registered. Please do, it's free!
+set_username = You may set/change your username if you wish.
+introduction = After registration, you'll get a Bitcoin address that you can use to send and receive payments via Bitcoin.\nYou may also choose a username.
+bye = Thanks for using this service. Bye!
+
+[Service discovery]
+user_list = Users
+your_addresses = Your addresses
+
+[DEFAULT]
+bitcoins = BTC {amount}

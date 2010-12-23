@@ -10,5 +10,6 @@ setup(name = "bitcoim",
     url = "http://gitorious.org/bitcoim/python-bitcoim/",
     license = "GPLv2",
     long_description = """""",
-    packages = ['bitcoim']
+    packages = ['bitcoim'],
+    data_files = [('share/bitcoim/messages', ['messages/en'])]
 )

@@ -1,5 +1,6 @@
 from addressable import Addressable
 from bitcoin.address import Address as BCAddress
+from i18n import _, DISCO, DEFAULT, ROSTER
 from jid import JID
 from paymentorder import PaymentOrder
 from xmpp.protocol import Presence, NodeProcessed, NS_VCARD, NS_VERSION, \
@@ -83,7 +84,7 @@ class Address(Addressable, BCAddress):
         elif 'items' == what:
             items = []
             if node is None and ((user.jid == self.owner.jid) or (user.isAdmin())):
-                items.append({'jid': self.owner.getLocalJID(), 'name': 'Owner'})
+                items.append({'jid': self.owner.getLocalJID(), 'name': _(DISCO, 'address_owner')})
             return items
 
     def iqReceived(self, cnx, iq):
@@ -97,7 +98,7 @@ class Address(Addressable, BCAddress):
             query = reply.getQuery()
             query.addChild('FN', payload=[self.address])
             #TODO: More generic URL generation
-            query.addChild('URL', payload=["http://blockexplorer.com/address/%s" % self.address])
+            query.addChild('URL', payload=[_(DEFAULT, 'url_bitcoin_address').format(address=self.address)])
             cnx.send(reply)
             raise NodeProcessed
         Addressable.iqReceived(self, cnx, iq)
@@ -131,10 +132,10 @@ class Address(Addressable, BCAddress):
         if not user.isRegistered():
             return
         if user.ownsAddress(self):
-            status = 'This address is mine'
+            status = _(ROSTER, 'own_address')
             percentage = self.getPercentageReceived()
             if percentage is not None:
-                status += '\nReceived %s%% of total balance' % percentage
+                status += '\n' + _(ROSTER, 'percentage_balance_received').format(percent=percentage)
         else:
             status = None
         cnx.send(Presence(to=user.jid, typ='available', show='online', status=status, frm=self.jid))

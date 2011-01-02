@@ -17,6 +17,8 @@ address_start_chat = I'm {address}. Talk to me.
 address2jid_description = Please enter the Bitcoin contact you would like to add.\nYou may enter a Bitcoin address or an existing username.
 address2jid_prompt = Bitcoin address
 address2jid_invalid = You must give an existing username or a Bitcoin address.
+own_address = This address is mine
+percentage_balance_received = Received {percent}% of total balance
 
 [Registration]
 error_invalid_jid = Your JID must contain a dot. That's the rule.
@@ -29,6 +31,8 @@ bye = Thanks for using this service. Bye!
 [Service discovery]
 user_list = Users
 your_addresses = Your addresses
+address_owner = Owner
 
 [DEFAULT]
 bitcoins = BTC {amount}
+url_bitcoin_address = "http://blockexplorer.com/address/{address}"

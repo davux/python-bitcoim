@@ -93,6 +93,8 @@ pending_header_target = Pending payments to me:
 pending_nothing_target = No pending payments to me.
 pending_item_global = [{code}] ({date}): %(bitcoins)s to {recipient}
 pending_item_target = [{code}] ({date}): %(bitcoins)s
+confirm_recap = You want to pay %(bitcoins)s to {recipient}.
+confirm_recap_comment = You want to pay %(bitcoins)s to {recipient} ({comment}).
 
 [DEFAULT]
 bitcoins = BTC {amount}

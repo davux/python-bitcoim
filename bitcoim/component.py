@@ -143,7 +143,7 @@ class Component(Addressable, XMPPComponent):
         if 0 == len(username):
             status = ''
         else:
-            status = _(ROSTER, 'hello_nick').format(nick=username)
+            status = _(ROSTER, 'hello_nick').format(nick=username) + ' '
         status += _(ROSTER, 'current_balance').format(amount=user.getBalance())
         self.send(Presence(to=user.jid, typ='available', show='online', status=status, frm=self.jid))
 

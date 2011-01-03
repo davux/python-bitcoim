@@ -1,0 +1,101 @@
+# This is the reference language file. It contains all the messages.
+
+[Console]
+cannot_connect = Connexion impossible à {server}:{port}
+cannot_auth = Authentification impossible en tant que {jid}
+
+[Commands]
+command_cancel = annuler
+command_cancel_usage = annuler [<code>]
+    - <code> est le code de confirmation d'un paiement en attente
+    Si aucun code n'est fourni, liste tous les paiements en attente
+command_confirm = confirmer
+command_confirm_usage = confirmer [<code>]
+    - <code> est le code de confirmation d'un paiement en attente
+    Si aucun code n'est fourni, liste tous les paiements en attente
+command_help = aide
+command_help_usage = aide [<commande>]
+command_paid = payé
+command_paid_usage = payé
+    Liste les paiements déjà effectués
+command_pay = payer
+command_pay_usage = payer <montant> [<raison>]
+    - <montant> doit être un nombre positif
+    - <raison> est un texte libre
+confirm_prompt = Veuillez confirmer en tapant: "%(command_confirm)s {code}".
+unknown_command = Commande inconnue "{command}". Tapez "%(command_help)s" pour la liste des commandes.
+error_message = Erreur: {message}
+usage_message = Syntaxe: {usage}
+command_list_prompt = Commandes possibles: {lst}. Tapez "%(command_help)s <commande>" pour avoir des détails.
+command_list_prompt_address = Vous pouvez aussi taper directement une adresse Bitcoin pour commencer à intéragir avec elle.
+
+[Roster interaction]
+hello_nick = Bonjour {nick} !
+current_balance = Solde actuel: %(bitcoins)s
+new_address_message = Bonjour ! Je suis votre nouvelle adresse Bitcoin.
+address_start_chat = Je suis {address}. Parlez-moi...
+address2jid_description = Veuillez ajouter le contact Bitcoin que vous voulez ajouter.
+    Ça peut être une adresse Bitcoin ou un nom d'utilisateur.
+address2jid_prompt = Adresse Bitcoin
+address2jid_invalid = Vous devez donner un nom d'utilisateur existant ou bien une adresse Bitcoin.
+own_address = Cette adresse est à moi
+percentage_balance_received = J'ai reçu {percent}% du total de votre compte.
+announce_disconnect = Nous coupons le service. À plus tard.
+
+[Registration]
+error_invalid_jid = Votre JID doit contenir au moins un point. C'est comme ça !
+error_invalid_username = Ce nom d'utilisateur est invalide, ou déjà pris.
+error_not_registered = Vous devez vous inscrire. N'hésitez pas, c'est gratuit !
+set_username = Vous pouvez définir ou changer votre nom d'utilisateur si vous voulez.
+introduction = En vous inscrivant, vous aurez une adresse Bitcoin que vous pourrez utiliser pour envoyer et recevoir des bitcoins.
+    Vous pouvez aussi choisir un nom d'utilisateur.
+bye = Quel dommage de vous voir partir... Merci d'avoir utilisé notre service, au revoir !
+
+[Service discovery]
+user_list = Utilisateurs
+your_addresses = Vos adresses
+other_s_addresses = Ses adresses
+address_owner = Propriétaire
+real_identity = Identité réelle
+
+[Transactions]
+error_amount_non_number = Le montant doit être un nombre
+error_amount_non_positive = Le montant doit être positif
+error_insufficient_funds = Vous n'avez pas assez de bitcoins pour effectuer ce paiement.
+error_no_amount = Vous devez indiquer un montant.
+error_payment_impossible = Paiement impossible : {reason}
+error_payment_to_gateway = Vous pouvez uniquement envoyer des bitcoins aux autres utilisateurs et aux adresses Bitcoin.
+error_payment_to_nobody = Il faut indiquer un destinataire du paiement, ou bien un code de confirmation en attente.
+error_payment_to_self = Ce n'est pas très logique, je suis votre propre adresse...
+error_tx_not_found = Il n'y a aucun paiement en attente avec le code "{code}"
+error_user_refuses_payments = Cet utilisateur n'accepte pas les paiements directs.
+warning_low_balance = Attention : pour l'instant, il ne vous reste que %(bitcoins)s sur votre compte.
+paid_recap_item = %(bitcoins)s
+paid_recap_item_dest = %(bitcoins)s à {dest}
+paid_recap_item_dest_unknown = %(bitcoins)s à un autre utilisateur qui est, depuis, invisible
+tx_comment = {message} ({comment})
+tx_confirmations = {message} – {confirmations} confirmations
+paid_recap_nothing_global = Vous n'avez rien envoyé
+paid_recap_nothing_target = Vous ne m'avez rien envoyé
+paid_recap_global = Vous avez payé : {summary}
+paid_recap_target = Vous m'avez payé : {summary}
+cancel_recap_target = Vous avez annulé le paiement de %(bitcoins)s. Dommage pour moi ;)
+cancel_recap_target_comment = Vous avez annulé le paiement de %(bitcoins)s ({comment}). Dommage pour moi ;)
+cancel_recap_other = Vous avez annulé le paiement de %(bitcoins)s à {recipient}.
+cancel_recap_other_comment = Vous avez annulé le paiement de %(bitcoins)s à {recipient} ({comment}).
+cancel_recap_warning_other = Attention : Le paiement ne m'était pas destiné. Cependant, comme vous avez fourni le bon code, je l'ai bien annulé.
+cancel_recap_warning_global = Attention : Il vaut mieux annuler un paiement en s'adressant à leur adresse de destination plutôt qu'à moi.
+pay_recap_user = Paiement vers un autre utilisateur effectué. Le paiement est effectif immédiatement.
+pay_recap = Paiement effectué. Identifiant de la transaction : {txid}
+pending_header_global = Paiements en attente de confirmation :
+pending_nothing_global = Aucun paiement en attente de confirmation.
+pending_header_target = Paiements en attente de confirmation qui me sont destinés :
+pending_nothing_target = Aucun paiement en attente de confirmation ne m'est destiné.
+pending_item_global = [{code}] ({date}): %(bitcoins)s à {recipient}
+pending_item_target = [{code}] ({date}): %(bitcoins)s
+confirm_recap = Vous souhaitez payer %(bitcoins)s à {recipient}.
+confirm_recap_comment = Vous souhaitez payer %(bitcoins)s à {recipient} ({comment}).
+
+[DEFAULT]
+bitcoins = {amount} bitcoins
+url_bitcoin_address = http://blockexplorer.com/address/{address}

@@ -230,7 +230,7 @@ class Command(object):
            or the generic help message if no command was given."""
         if command is None:
             possibleCommands = [_(COMMANDS, 'command_help'), _(COMMANDS, 'command_paid')]
-            if (target is not None) and (target.account != user.jid):
+            if (target is not None) and (target.jid != user.jid):
                 possibleCommands.extend([_(COMMANDS, 'command_pay'), _(COMMANDS, 'command_confirm'), _(COMMANDS, 'command_cancel')])
             elif (target is None):
                 possibleCommands.extend([_(COMMANDS, 'command_confirm'), _(COMMANDS, 'command_cancel')])

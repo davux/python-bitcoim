@@ -4,6 +4,7 @@
 '''
 
 from bitcoin.transaction import CATEGORY_MOVE, CATEGORY_SEND
+from i18n import _, COMMANDS, TX
 from jid import JID
 from logging import debug, info
 from paymentorder import PaymentOrder, PaymentError, PaymentNotFoundError, \
@@ -48,50 +49,42 @@ class Command(object):
     def usage(self):
         """Return an explanation message about how to use the command. Raise an
            exception if the command doesn't exist."""
-        if COMMAND_PAY == self.action:
-            return 'pay <amount> [<reason>]\n - <amount> must be a positive number\n - <reason> is a free-form text'
-        if COMMAND_PAID == self.action:
-            return 'paid\nList past payments'
-        if COMMAND_CANCEL == self.action:
-            return 'cancel [<code>]\n - <code> is the confirmation code of a pending payment\nIf no code is given, list all pending payments'
-        if COMMAND_CONFIRM == self.action:
-            return 'confirm [<code>]\n - <code> is the confirmation code of a pending payment\nIf no code is given, list all pending payments'
-        elif COMMAND_HELP == self.action:
-            return 'help [<command>]'
-        else:
-            raise UnknownCommandError, self.action
+        for action in ['pay', 'paid', 'cancel', 'confirm', 'help']:
+            if _(COMMANDS, 'command_'+action) == self.action:
+                return _(COMMANDS, 'command_'+action+'_usage')
+        raise UnknownCommandError, self.action
 
     def execute(self, user):
         """Actually execute the command, on behalf of the given user."""
         debug("A command was sent: %s" % self.action)
-        if COMMAND_PAY == self.action:
+        if _(COMMANDS, 'command_pay') == self.action:
             if self.target is None:
-                raise CommandTargetError, 'You can only send coins to a user or an address.'
+                raise CommandTargetError, _(TX, 'error_payment_to_gateway')
             try:
                 amount = self.arguments.pop(0)
             except IndexError:
-                raise CommandSyntaxError, 'You must specify an amount.'
+                raise CommandSyntaxError, _(TX, 'error_no_amount')
             comment = ' '.join(self.arguments)
             return self._executePay(user, amount, self.target, comment)
-        elif COMMAND_CANCEL == self.action:
+        elif _(COMMANDS, 'command_cancel') == self.action:
             try:
                 code = self.arguments.pop(0)
                 return self._executeCancel(user, code)
             except IndexError:
                 return self._executeListPending(user)
-        elif COMMAND_CONFIRM == self.action:
+        elif _(COMMANDS, 'command_confirm') == self.action:
             try:
                 code = self.arguments.pop(0)
                 return self._executeConfirm(user, code)
             except IndexError:
                 return self._executeListPending(user)
-        elif COMMAND_HELP == self.action:
+        elif _(COMMANDS, 'command_help') == self.action:
             try:
                 targetCommand = self.arguments.pop(0)
             except IndexError:
                 targetCommand = None
             return self._executeHelp(user, self.target, targetCommand)
-        elif COMMAND_PAID == self.action:
+        elif _(COMMANDS, 'command_paid') == self.action:
             return self._executePaid(user)
         else:
             raise UnknownCommandError, self.action
@@ -103,22 +96,23 @@ class Command(object):
         try:
             amount = int(amount)
         except ValueError:
-            raise CommandSyntaxError, 'The amount must be a number.'
+            raise CommandSyntaxError, _(TX, 'error_amount_non_number')
         if amount <= 0:
-            raise CommandSyntaxError, 'The amount must be positive.'
+            raise CommandSyntaxError, _(TX, 'error_amount_non_positive')
         try:
             order = PaymentOrder(sender, target, amount, comment)
         except PaymentToSelfError:
-            raise CommandSyntaxError, 'You know, I\'m your own address. It doesn\'t make sense.'
+            raise CommandSyntaxError, _(TX, 'error_payment_to_self')
         order.queue()
         info("Payment order valid, queued: %s -> %s (BTC %s, %s)" % \
              (sender, target, amount, order.code))
-        reply = "You want to pay BTC %s to %s" % (amount, order.recipient)
-        if 0 != len(comment):
-            reply += ' (%s)' % comment
-        reply += ". Please confirm by typing: 'confirm %s'." % order.code
+        if 0 == len(comment):
+            reply = _(TX, 'confirm_recap').format(amount=amount, recipient=order.recipient)
+        else:
+            reply = _(TX, 'confirm_recap_comment').format(amount=amount, recipient=order.recipient, comment=comment)
+        reply += ' ' + _(COMMAND, 'confirm_prompt').format(code=order.code)
         if sender.getBalance() - amount < WARNING_LIMIT:
-            reply += " Note: you only have BTC %d left on your account right now." % sender.getBalance()
+            reply += ' ' + _(TX, 'warning_low_balance').format(amount=sender.getBalance())
         return reply
 
     def _executePaid(self, user):
@@ -130,29 +124,34 @@ class Command(object):
                 continue
             if self.target is not None and (self.target.jid != payment.otheraccount):
                 continue
-            reply += "\nBTC %s" % abs(payment.amount)
-            if payment.otheraccount is not None:
+            reply += "\n"
+            amount = abs(payment.amount)
+            if payment.otheraccount is None:
+                reply += _(TX, 'paid_recap_item').format(amount=amount)
+            else:
                 recipient = UserAccount(JID(payment.otheraccount))
-                if recipient != self.target:
+                if recipient == self.target:
+                    reply += _(TX, 'paid_recap_item').format(amount=amount)
+                else:
                     if user.isAdmin() or (0 != len(recipient.username)):
-                        reply += " to %s" % recipient.getLabel()
+                        reply += _(TX, 'paid_recap_item_dest').format(amount=amount, dest=recipient.getLabel())
                     else:
-                        reply += " to another user who became invisible since then"
+                        reply += _(TX, 'paid_recap_item_dest_unknown').format(amount=amount)
             if payment.message is not None:
-                reply += " (%s)" % payment.message
+                reply = _(TX, 'tx_comment').format(message=reply, comment=payment.message)
             confirmations = payment.confirmations
             if 0 <= confirmations:
-                reply += " – %s confirmations" % payment.confirmations
+                reply = _(TX, 'tx_confirmations').format(message=reply, confirmations=payment.confirmations)
         if 0 == len(reply):
             if self.target is None:
-                reply = "You didn't send any coins"
+                reply = _(TX, 'paid_recap_nothing_global')
             else:
-                reply = "You didn't send me any coins"
+                reply = _(TX, 'paid_recap_nothing_target')
         else:
             if self.target is None:
-                reply = "You paid:%s" % reply
+                reply = _(TX, 'paid_recap_global').format(summary=reply)
             else:
-                reply = "You paid me:%s" % reply
+                reply = _(TX, 'paid_recap_target').format(summary=reply)
         return reply
 
     def _executeCancel(self, user, code=None):
@@ -162,24 +161,25 @@ class Command(object):
         try:
             payment = PaymentOrder(user, code=code)
         except PaymentNotFoundError:
-            raise CommandError, 'No payment was found with code \'%s\'' % code
+            raise CommandError, _(TX, 'error_tx_not_found').format(code=code)
         payment.cancel()
         debug("Payment %s (BTC %s to %s) was cancelled by %s" % \
               (code, payment.amount, payment.recipient, user))
         target = self.target
         if target == payment.target:
-            reply = "Cancelled payment of BTC %s to me" % payment.amount
-            if 0 != len(payment.comment):
-                reply += " (%s)" % payment.comment
-            reply += ". Too bad!"
-        else:
-            reply = "Cancelled payment of BTC %s to %s" % (payment.amount, payment.recipient)
-            if 0 != len(payment.comment):
-                reply += " (%s)" % payment.comment
-            if target is None:
-                reply += ". Warning: It's better to cancel a payment from its recipient."
+            if 0 == len(payment.comment):
+                reply = _(TX, 'cancel_recap_target').format(amount=payment.amount)
             else:
-                reply += ". Warning: The payment was not to me. Since you gave the right code I cancelled it anyway."
+                reply = _(TX, 'cancel_recap_target_comment').format(amount=payment.amount, comment=payment.comment)
+        else:
+            if 0 == len(payment.comment):
+                reply = _(TX, 'cancel_recap_other').format(amount=payment.amount, recipient=payment.recipient)
+            else:
+                reply = _(TX, 'cancel_recap_other_comment').format(amount=payment.amount, recipient=payment.recipient, comment=payment.comment)
+            if target is None:
+                reply += ' ' . _(TX, 'cancel_recap_warning_global')
+            else:
+                reply += ' ' . _(TX, 'cancel_recap_warning_other')
         return reply
 
     def _executeConfirm(self, user, code=None):
@@ -189,38 +189,43 @@ class Command(object):
         try:
             payment = PaymentOrder(user, code=code)
         except PaymentNotFoundError:
-            raise CommandError, 'No payment was found with code \'%s\'' % code
+            raise CommandError, _(TX, 'error_tx_not_found').format(code=code)
         try:
             transactionId = payment.confirm()
         except NotEnoughBitcoinsError:
-            raise CommandError, 'You don\'t have enough bitcoins to do that payment.'
+            raise CommandError, _(TX, 'error_insufficient_funds')
         except PaymentError, message:
-            raise CommandError, 'Can\'t confirm: %s' % message
+            raise CommandError, _(TX, 'error_payment_impossible').format(reason=message)
         info("BTC %s paid from %s to %s. Transaction ID: %s" % \
               (payment.amount, user, payment.recipient, transactionId))
         if 0 == transactionId:
-            reply = "Payment to another user done. This has an immediate effect."
+            reply = _(TX, 'pay_recap_user')
         else:
-            reply = "Payment done. Transaction ID: %s" % transactionId
+            reply = _(TX, 'pay_recap').format(txid=transactionId)
         return reply
 
     def _executeListPending(self, user):
         """Called internally. Generate the listing of all pending payments."""
         reply = ''
         if self.target is None:
-            label = "Pending payments:"
-            empty = "No pending payments."
+            label = _(TX, 'pending_header_global')
+            empty = _(TX, 'pending_nothing_global')
             for row in user.pendingPayments():
-                reply += "\n[%s] (%s): BTC %s to %s" % (row['confirmation_code'], row['date'].date().isoformat(), row['amount'], row['recipient'])
+                reply += "\n" + _(TX, 'pending_item_global').format(code=row['confirmation_code'],\
+                                                                    date=row['date'].date().isoformat(),\
+                                                                    amount=row['amount'],\
+                                                                    recipient=row['recipient'])
                 if 0 != len(row['comment']):
-                    reply += ' (%s)' % row['comment']
+                    reply = _(TX, 'tx_comment').format(message=reply, comment=row['comment'])
         else:
-            label = "Pending payments to me:"
-            empty = "No pending payments to me."
+            label = _(TX, 'pending_header_target')
+            empty = _(TX, 'pending_nothing_target')
             for row in user.pendingPayments(self.target):
-                reply += "\n[%s] (%s): BTC %s" % (row['confirmation_code'], row['date'].date().isoformat(), row['amount'])
+                reply += "\n" + _(TX, 'pending_item_global').format(code=row['confirmation_code'],\
+                                                                    date=row['date'].date().isoformat(),\
+                                                                    amount=row['amount'])
                 if 0 != len(row['comment']):
-                    reply += ' (%s)' % row['comment']
+                    reply = _(TX, 'tx_comment').format(message=reply, comment=row['comment'])
         if 0 == len(reply):
             return empty
         else:
@@ -235,12 +240,12 @@ class Command(object):
                 possibleCommands.extend(['pay', 'confirm', 'cancel'])
             elif (target is None):
                 possibleCommands.extend(['confirm', 'cancel'])
-            reply = 'Possible commands: %s. Type \'help <command>\' for details.' % ', '.join(possibleCommands)
+            reply = _(COMMANDS, 'command_list_prompt').format(lst=', '.join(possibleCommands))
             if target is None:
-                reply += ' You can also type a bitcoin address directly to start a chat.'
+                reply += ' ' . _(COMMANDS, 'command_list_prompt_address')
         else:
             try:
-                reply = "Usage: " + Command(command).usage()
+                reply = _(COMMANDS, 'usage_message').format(usage=Command(command).usage())
             except UnknownCommandError:
                 raise CommandSyntaxError, 'help: No such command \'%s\'' % command
         return reply

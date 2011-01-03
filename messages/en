@@ -5,9 +5,22 @@ cannot_connect = Unable to connect to {server}:{port}
 cannot_auth = Unable to authenticate as {jid}
 
 [Commands]
+command_cancel = cancel
+command_cancel_usage = cancel [<code>]\n - <code> is the confirmation code of a pending payment\nIfno code is given, list all pending payments
+command_confirm = confirm
+command_confirm_usage = confirm [<code>]\n - <code> is the confirmation code of a pending payment\nIf no code is given, list all pending payments
 command_help = help
+command_help_usage = help [<command>]
+command_paid = paid
+command_paid_usage = paid\nList past payments
+command_pay = pay
+command_pay_usage = pay <amount> [<reason>]\n - <amount> must be a positive number\n - <reason> is a free-form text
+confirm_prompt = Please confirm by typing: '%(command_confirm)s {code}'.
 unknown_command = Unknown command {command}. Type '%(command_help)s' for a list of accepted commands.
 error_message = Error: {message}
+usage_message = Usage: {usage}
+command_list_prompt = Possible commands: {lst}. Type '%(command_help)s <command>' for details.
+command_list_prompt_address = You can also type a bitcoin address directly to start a chat.
 
 [Roster interaction]
 hello_nick = Hi {nick}!
@@ -33,6 +46,40 @@ user_list = Users
 your_addresses = Your addresses
 address_owner = Owner
 
+[Transactions]
+error_amount_non_number = The amount must be a number
+error_amount_non_positive = The amount must be positive
+error_insufficient_funds = You don't have enough bitcoins to do that payment.
+error_no_amount = You must specify an amount
+error_payment_impossible = Can't effectuate the payment: {reason}
+error_payment_to_gateway = You can only send coins to a user or an address
+error_payment_to_self = You know, I'm your own address. It doesn't make sense.
+error_tx_not_found = No payment was found with code '{code}'
+warning_low_balance = Warning: you only have {amount} left on your account right now.
+paid_recap_item = %(bitcoins)s
+paid_recap_item_dest = %(bitcoins)s to {dest}
+paid_recap_item_dest_unknown = %(bitcoins)s to another user who became invisible since then
+tx_comment = {message} ({comment})
+tx_confirmations = {message} – {confirmations} confirmations
+paid_recap_nothing_global = You didn't send any coins
+paid_recap_nothing_target = You didn't send me any coins
+paid_recap_global = You paid: {summary}
+paid_recap_target = You paid me: {summary}
+cancel_recap_target = Cancelled payment of %(bitcoins)s to me. Too bad!
+cancel_recap_target_comment = Cancelled payment of %(bitcoins)s to me ({comment}). Too bad!
+cancel_recap_other = Cancelled payment of %(bitcoins)s to {recipient}.
+cancel_recap_other_comment = Cancelled payment of %(bitcoins)s to {recipient} ({comment}).
+cancel_recap_warning_other = Warning: The payment was not to me. Since you gave the right code, I cancelled it anyway
+cancel_recap_warning_global = Warning: It's better to cancel a payment from its recipient.
+pay_recap_user = Payment to another user done. This has an immediate effect.
+pay_recap = Payment done. Transaction ID: {txid}
+pending_header_global = Pending payments:
+pending_nothing_global = No pending payments.
+pending_header_target = Pending payments to me:
+pending_nothing_target = No pending payments to me.
+pending_item_global = [{code}] ({date}): %(bitcoins)s to {recipient}
+pending_item_target = [{code}] ({date}): %(bitcoins)s
+
 [DEFAULT]
 bitcoins = BTC {amount}
-url_bitcoin_address = "http://blockexplorer.com/address/{address}"
+url_bitcoin_address = http://blockexplorer.com/address/{address}

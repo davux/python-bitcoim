@@ -9,6 +9,7 @@ COMMANDS = 'Commands'
 DEFAULT = 'DEFAULT'
 DISCO = 'Service discovery'
 ROSTER = 'Roster interaction'
+TX = 'Transactions'
 
 _paths = []
 for dir in [j(prefix, 'share'), j(prefix, 'local', 'share'), j(sep, 'etc')]:

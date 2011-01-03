@@ -127,7 +127,7 @@ class Component(Addressable, XMPPComponent):
 
     def sayGoodbye(self):
         '''Ending method. Doesn't do anything interesting yet.'''
-        message = 'Service is shutting down. See you later.'
+        message = _(ROSTER, 'announce_disconnect')
         for user in self.connectedUsers:
             self.send(Presence(to=user.jid, frm=self.jid, typ='unavailable', status=message))
             for addr in user.getRoster():

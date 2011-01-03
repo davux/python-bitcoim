@@ -110,7 +110,7 @@ class Command(object):
             reply = _(TX, 'confirm_recap').format(amount=amount, recipient=order.recipient)
         else:
             reply = _(TX, 'confirm_recap_comment').format(amount=amount, recipient=order.recipient, comment=comment)
-        reply += ' ' + _(COMMAND, 'confirm_prompt').format(code=order.code)
+        reply += ' ' + _(COMMANDS, 'confirm_prompt').format(code=order.code)
         if sender.getBalance() - amount < WARNING_LIMIT:
             reply += ' ' + _(TX, 'warning_low_balance').format(amount=sender.getBalance())
         return reply
@@ -235,11 +235,11 @@ class Command(object):
         """Called internally. Generate the help message for the given command,
            or the generic help message if no command was given."""
         if command is None:
-            possibleCommands = ['help', 'paid']
+            possibleCommands = [_(COMMANDS, 'command_help'), _(COMMANDS, 'command_paid')]
             if (target is not None) and (target.account != user.jid):
-                possibleCommands.extend(['pay', 'confirm', 'cancel'])
+                possibleCommands.extend([_(COMMANDS, 'command_pay'), _(COMMANDS, 'command_confirm'), _(COMMANDS, 'command_cancel')])
             elif (target is None):
-                possibleCommands.extend(['confirm', 'cancel'])
+                possibleCommands.extend([_(COMMANDS, 'command_confirm'), _(COMMANDS, 'command_cancel')])
             reply = _(COMMANDS, 'command_list_prompt').format(lst=', '.join(possibleCommands))
             if target is None:
                 reply += ' ' + _(COMMANDS, 'command_list_prompt_address')

@@ -40,6 +40,7 @@ address2jid_prompt = Bitcoin address
 address2jid_invalid = You must give an existing username or a Bitcoin address.
 own_address = This address is mine
 percentage_balance_received = Received {percent}% of total balance
+announce_disconnect = Service is shutting down. See you later.
 
 [Registration]
 error_invalid_jid = Your JID must contain a dot. That's the rule.

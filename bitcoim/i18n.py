@@ -22,13 +22,15 @@ didn't work.
 
 _parsers = {}
 
-def _(section, key, lang=None, fallback=fallbackLangs):
+def _(section, key, lang=None, fallback=None):
     '''Translate `key` (found in [`section`]) in `lang`. The translation is
        looked up in the paths given by `paths`.
        If the lookup fails, the translation is intented again with each
        language given in the `fallback` list, whose default value is that of
        `i18n.fallbackLangs`.
     '''
+    if fallback is None:
+        fallback = fallbackLangs
     nxt = list(fallback)
     if lang is None:
         try:

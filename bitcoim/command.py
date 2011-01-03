@@ -221,7 +221,7 @@ class Command(object):
             label = _(TX, 'pending_header_target')
             empty = _(TX, 'pending_nothing_target')
             for row in user.pendingPayments(self.target):
-                reply += "\n" + _(TX, 'pending_item_global').format(code=row['confirmation_code'],\
+                reply += "\n" + _(TX, 'pending_item_target').format(code=row['confirmation_code'],\
                                                                     date=row['date'].date().isoformat(),\
                                                                     amount=row['amount'])
                 if 0 != len(row['comment']):

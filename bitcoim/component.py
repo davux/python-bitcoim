@@ -10,7 +10,7 @@ from command import Command, parse as parseCommand, CommandError, \
                     CommandSyntaxError, CommandTargetError, \
                     UnknownCommandError
 from datetime import datetime
-from i18n import _, COMMANDS, DISCO, ROSTER
+from i18n import _, COMMANDS, DISCO, REGISTRATION, ROSTER
 from jid import JID
 from logging import debug, info, warning
 from useraccount import UserAccount, AlreadyRegisteredError, UnknownUserError,\

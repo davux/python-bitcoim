@@ -8,6 +8,7 @@ from sys import prefix
 COMMANDS = 'Commands'
 DEFAULT = 'DEFAULT'
 DISCO = 'Service discovery'
+REGISTRATION = 'Registration'
 ROSTER = 'Roster interaction'
 TX = 'Transactions'
 

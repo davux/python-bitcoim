@@ -53,7 +53,9 @@ bye = Thanks for using this service. Bye!
 [Service discovery]
 user_list = Users
 your_addresses = Your addresses
+other_s_addresses = Their addresses
 address_owner = Owner
+real_identity = Real identity
 
 [Transactions]
 error_amount_non_number = The amount must be a number

@@ -6,6 +6,7 @@ from addressable import Addressable
 from bitcoin.controller import Controller
 from bitcoin.transaction import Transaction
 from db import SQL
+from i18n import _, DISCO, ROSTER
 from jid import JID
 from logging import debug, info, error, warning
 from xmpp.jep0106 import JIDEncode, JIDDecode
@@ -281,9 +282,9 @@ class UserAccount(Addressable):
     def discoReceived(self, fromUser, what, node):
         if (fromUser == self) or (fromUser.isAdmin()):
             if fromUser == self:
-                label_addresses = 'Your addresses'
+                label_addresses = _(DISCO, 'your_addresses')
             else:
-                label_addresses = 'Their addresses'
+                label_addresses = _(DISCO, 'other_s_addresses')
             if 'info' == what:
                 if node is None:
                     ids = [{'category': 'account', 'type': 'registered', 'name': self.getLabel()}]
@@ -295,7 +296,7 @@ class UserAccount(Addressable):
                 items = []
                 if node is None:
                     items.append({'jid': self.getLocalJID(), 'name': label_addresses, 'node': 'addresses'})
-                    items.append({'jid': self.jid, 'name': 'Real identity'})
+                    items.append({'jid': self.jid, 'name': _(DISCO, 'real_identity')})
                 elif 'addresses' == node:
                     for address in self.getAddresses():
                         items.append({'jid': Address(address).jid, 'name': address})
@@ -355,7 +356,7 @@ class UserAccount(Addressable):
         if not user.isRegistered():
             return
         if (user == self) or (user.isAdmin()):
-            status = 'Current balance: BTC %s' % self.getBalance()
+            status = _(ROSTER, 'current_balance').format(amount=self.getBalance())
         else:
             status = None
         if fromUsername and (len(self.username) != 0):

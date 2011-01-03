@@ -260,7 +260,7 @@ class Component(Addressable, XMPPComponent):
                     username.setData(user.username)
                 else:
                     debug("A new user is preparing a registration")
-                    instructions.setData(_(REGISTRATION, 'instructions'))
+                    instructions.setData(_(REGISTRATION, 'introduction'))
                 reply = iq.buildReply('result')
                 query = reply.getQuery()
                 if registered:

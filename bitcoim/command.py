@@ -177,9 +177,9 @@ class Command(object):
             else:
                 reply = _(TX, 'cancel_recap_other_comment').format(amount=payment.amount, recipient=payment.recipient, comment=payment.comment)
             if target is None:
-                reply += ' ' . _(TX, 'cancel_recap_warning_global')
+                reply += ' ' + _(TX, 'cancel_recap_warning_global')
             else:
-                reply += ' ' . _(TX, 'cancel_recap_warning_other')
+                reply += ' ' + _(TX, 'cancel_recap_warning_other')
         return reply
 
     def _executeConfirm(self, user, code=None):
@@ -242,7 +242,7 @@ class Command(object):
                 possibleCommands.extend(['confirm', 'cancel'])
             reply = _(COMMANDS, 'command_list_prompt').format(lst=', '.join(possibleCommands))
             if target is None:
-                reply += ' ' . _(COMMANDS, 'command_list_prompt_address')
+                reply += ' ' + _(COMMANDS, 'command_list_prompt_address')
         else:
             try:
                 reply = _(COMMANDS, 'usage_message').format(usage=Command(command).usage())

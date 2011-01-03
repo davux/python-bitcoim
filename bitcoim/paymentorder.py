@@ -2,6 +2,7 @@ from bitcoin.address import Address, InvalidBitcoinAddressError
 from bitcoin.controller import Controller
 from datetime import datetime
 from db import SQL
+from i18n import _, TX
 from jsonrpc.proxy import JSONRPCException
 from logging import debug, info, warning
 import random
@@ -22,13 +23,13 @@ class PaymentOrder(object):
             if sender == target:
                 raise PaymentToSelfError
             if 0 == len(target.username):
-                raise InvalidPaymentError, 'This user doesn\'t accept direct payments.'
+                raise InvalidPaymentError, _(TX, 'error_user_refuses_payments')
             self.recipient = target.username
         else:
             self.recipient = None
         if code is None:
             if self.recipient is None:
-                raise InvalidPaymentError, 'A recipient or an existing payment code must be given'
+                raise InvalidPaymentError, _(TX, 'error_payment_to_nobody')
             self.amount = amount
             self.comment = comment
             self.fee = fee

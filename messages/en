@@ -6,15 +6,22 @@ cannot_auth = Unable to authenticate as {jid}
 
 [Commands]
 command_cancel = cancel
-command_cancel_usage = cancel [<code>]\n - <code> is the confirmation code of a pending payment\nIfno code is given, list all pending payments
+command_cancel_usage = cancel [<code>]
+    - <code> is the confirmation code of a pending payment
+    If no code is given, list all pending payments
 command_confirm = confirm
-command_confirm_usage = confirm [<code>]\n - <code> is the confirmation code of a pending payment\nIf no code is given, list all pending payments
+command_confirm_usage = confirm [<code>]
+    - <code> is the confirmation code of a pending payment
+    If no code is given, list all pending payments
 command_help = help
 command_help_usage = help [<command>]
 command_paid = paid
-command_paid_usage = paid\nList past payments
+command_paid_usage = paid
+    List past payments
 command_pay = pay
-command_pay_usage = pay <amount> [<reason>]\n - <amount> must be a positive number\n - <reason> is a free-form text
+command_pay_usage = pay <amount> [<reason>]
+    - <amount> must be a positive number
+    - <reason> is a free-form text
 confirm_prompt = Please confirm by typing: '%(command_confirm)s {code}'.
 unknown_command = Unknown command {command}. Type '%(command_help)s' for a list of accepted commands.
 error_message = Error: {message}
@@ -27,7 +34,8 @@ hello_nick = Hi {nick}!
 current_balance = Current balance: %(bitcoins)s
 new_address_message = Hi! I'm your new Bitcoin address.
 address_start_chat = I'm {address}. Talk to me.
-address2jid_description = Please enter the Bitcoin contact you would like to add.\nYou may enter a Bitcoin address or an existing username.
+address2jid_description = Please enter the Bitcoin contact you would like to add.
+    You may enter a Bitcoin address or an existing username.
 address2jid_prompt = Bitcoin address
 address2jid_invalid = You must give an existing username or a Bitcoin address.
 own_address = This address is mine
@@ -38,7 +46,8 @@ error_invalid_jid = Your JID must contain a dot. That's the rule.
 error_invalid_username = This username is invalid or not available.
 error_not_registered = You're not registered. Please do, it's free!
 set_username = You may set/change your username if you wish.
-introduction = After registration, you'll get a Bitcoin address that you can use to send and receive payments via Bitcoin.\nYou may also choose a username.
+introduction = After registration, you'll get a Bitcoin address that you can use to send and receive payments via Bitcoin.
+    You may also choose a username.
 bye = Thanks for using this service. Bye!
 
 [Service discovery]

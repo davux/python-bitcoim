@@ -11,12 +11,6 @@ from paymentorder import PaymentOrder, PaymentError, PaymentNotFoundError, \
                          NotEnoughBitcoinsError, PaymentToSelfError
 from useraccount import UserAccount
 
-COMMAND_HELP = 'help'
-COMMAND_PAY = 'pay'
-COMMAND_CANCEL = 'cancel'
-COMMAND_CONFIRM = 'confirm'
-COMMAND_PAID = 'paid'
-
 WARNING_LIMIT = 10
 '''The amount above which you will be warned when inserting a payment order'''
 

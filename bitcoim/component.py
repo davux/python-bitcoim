@@ -6,8 +6,8 @@ from addressable import Addressable, generate as generateAddressable
 from bitcoim import LIB_NAME, LIB_DESCRIPTION, LIB_VERSION
 from bitcoin.address import InvalidBitcoinAddressError
 from bitcoin.controller import Controller
-from command import Command, parse as parseCommand, COMMAND_HELP, \
-                    CommandSyntaxError, CommandTargetError, CommandError, \
+from command import Command, parse as parseCommand, CommandError, \
+                    CommandSyntaxError, CommandTargetError, \
                     UnknownCommandError
 from datetime import datetime
 from i18n import _, COMMANDS, DISCO, ROSTER

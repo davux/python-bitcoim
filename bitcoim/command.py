@@ -118,8 +118,10 @@ class Command(object):
                 continue
             if self.target is not None and (self.target.jid != payment.otheraccount):
                 continue
+            if 0 <= payment.amount:
+                continue
+            amount = -payment.amount
             reply += "\n"
-            amount = abs(payment.amount)
             if payment.otheraccount is None:
                 reply += _(TX, 'paid_recap_item').format(amount=amount)
             else:

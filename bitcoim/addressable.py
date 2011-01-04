@@ -1,5 +1,6 @@
 from bitcoim import LIB_NAME, LIB_VERSION
 from bitcoin.address import InvalidBitcoinAddressError
+from datetime import datetime
 from jid import JID
 from logging import debug
 from xmpp.jep0106 import JIDDecode

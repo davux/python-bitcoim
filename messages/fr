@@ -13,9 +13,9 @@ command_confirm_usage = confirmer [<code>]
     Si aucun code n'est fourni, liste tous les paiements en attente
 command_help = aide
 command_help_usage = aide [<commande>]
-command_paid = payé
-command_paid_usage = payé
-    Liste les paiements déjà effectués
+command_history = historique
+command_history_usage = historique
+    Liste l'historique des paiements
 command_pay = payer
 command_pay_usage = payer <montant> [<raison>]
     - <montant> doit être un nombre positif
@@ -68,15 +68,17 @@ error_payment_to_self = Ce n'est pas très logique, je suis votre propre adresse
 error_tx_not_found = Il n'y a aucun paiement en attente avec le code "{code}"
 error_user_refuses_payments = Cet utilisateur n'accepte pas les paiements directs.
 warning_low_balance = Attention : pour l'instant, il ne vous reste que %(bitcoins)s sur votre compte.
-paid_recap_item = %(bitcoins)s
-paid_recap_item_dest = %(bitcoins)s à {dest}
-paid_recap_item_dest_unknown = %(bitcoins)s à un autre utilisateur qui est, depuis, invisible
+history_recap_item = %(bitcoins)s
+history_recap_item_to = %(bitcoins)s à {dest}
+history_recap_item_from = %(bitcoins)s par {dest}
+history_recap_item_to_unknown = %(bitcoins)s à un autre utilisateur qui est, depuis, invisible
+history_recap_item_from_unknown = %(bitcoins)s d'un autre utilisateur qui est, depuis, invisible
 tx_comment = {message} ({comment})
 tx_confirmations = {message} – {confirmations} confirmations
-paid_recap_nothing_global = Vous n'avez rien envoyé
-paid_recap_nothing_target = Vous ne m'avez rien envoyé
-paid_recap_global = Vous avez payé : {summary}
-paid_recap_target = Vous m'avez payé : {summary}
+history_recap_nothing_global = Vous n'avez rien envoyé ni reçu
+history_recap_nothing_target = Nous ne nous sommes jamais rien envoyé
+history_recap_global = Votre historique : {summary}
+history_recap_target = Notre historique ensemble : {summary}
 cancel_recap_target = Vous avez annulé le paiement de %(bitcoins)s. Dommage pour moi ;)
 cancel_recap_target_comment = Vous avez annulé le paiement de %(bitcoins)s ({comment}). Dommage pour moi ;)
 cancel_recap_other = Vous avez annulé le paiement de %(bitcoins)s à {recipient}.

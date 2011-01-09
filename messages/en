@@ -15,9 +15,9 @@ command_confirm_usage = confirm [<code>]
     If no code is given, list all pending payments
 command_help = help
 command_help_usage = help [<command>]
-command_paid = paid
-command_paid_usage = paid
-    List past payments
+command_history = history
+command_history_usage = history
+    List history of payments
 command_pay = pay
 command_pay_usage = pay <amount> [<reason>]
     - <amount> must be a positive number
@@ -70,15 +70,17 @@ error_payment_to_self = You know, I'm your own address. It doesn't make sense.
 error_tx_not_found = No payment was found with code '{code}'
 error_user_refuses_payments = This user doesn't accept direct payments.
 warning_low_balance = Warning: you only have {amount} left on your account right now.
-paid_recap_item = %(bitcoins)s
-paid_recap_item_dest = %(bitcoins)s to {dest}
-paid_recap_item_dest_unknown = %(bitcoins)s to another user who became invisible since then
+history_recap_item = %(bitcoins)s
+history_recap_item_to = %(bitcoins)s to {dest}
+history_recap_item_from = %(bitcoins)s from {dest}
+history_recap_item_to_unknown = %(bitcoins)s to another user who became invisible since then
+history_recap_item_from_unknown = %(bitcoins)s from another user who became invisible since then
 tx_comment = {message} ({comment})
 tx_confirmations = {message} – {confirmations} confirmations
-paid_recap_nothing_global = You didn't send any coins
-paid_recap_nothing_target = You didn't send me any coins
-paid_recap_global = You paid: {summary}
-paid_recap_target = You paid me: {summary}
+history_recap_nothing_global = You didn't send or receive any coins
+history_recap_nothing_target = We didn't send any coins to each other
+history_recap_global = Your history: {summary}
+history_recap_target = Our history together: {summary}
 cancel_recap_target = Cancelled payment of %(bitcoins)s to me. Too bad!
 cancel_recap_target_comment = Cancelled payment of %(bitcoins)s to me ({comment}). Too bad!
 cancel_recap_other = Cancelled payment of %(bitcoins)s to {recipient}.

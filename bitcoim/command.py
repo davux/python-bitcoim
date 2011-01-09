@@ -43,7 +43,7 @@ class Command(object):
     def usage(self):
         """Return an explanation message about how to use the command. Raise an
            exception if the command doesn't exist."""
-        for action in ['pay', 'paid', 'cancel', 'confirm', 'help']:
+        for action in ['pay', 'history', 'cancel', 'confirm', 'help']:
             if _(COMMANDS, 'command_'+action) == self.action:
                 return _(COMMANDS, 'command_'+action+'_usage')
         raise UnknownCommandError, self.action
@@ -78,8 +78,8 @@ class Command(object):
             except IndexError:
                 targetCommand = None
             return self._executeHelp(user, self.target, targetCommand)
-        elif _(COMMANDS, 'command_paid') == self.action:
-            return self._executePaid(user)
+        elif _(COMMANDS, 'command_history') == self.action:
+            return self._executeHistory(user)
         else:
             raise UnknownCommandError, self.action
 
@@ -109,30 +109,27 @@ class Command(object):
             reply += ' ' + _(TX, 'warning_low_balance').format(amount=sender.getBalance())
         return reply
 
-    def _executePaid(self, user):
-        """Called internally. List the past outgoing transactions made by the
-           user. The command behaves the same whatever the target (for now)."""
+    def _executeHistory(self, user):
+        """Called internally. List the past transactions related to the user.
+           The command behaves the same whatever the target (for now)."""
         reply = ''
         for payment in user.pastPayments():
-            if payment.category not in [CATEGORY_SEND, CATEGORY_MOVE]:
-                continue
             if self.target is not None and (self.target.jid != payment.otheraccount):
                 continue
-            if 0 <= payment.amount:
-                continue
-            amount = -payment.amount
+            amount = payment.amount
             reply += "\n"
             if payment.otheraccount is None:
-                reply += _(TX, 'paid_recap_item').format(amount=amount)
+                reply += _(TX, 'history_recap_item').format(amount=amount)
             else:
-                recipient = UserAccount(JID(payment.otheraccount))
-                if recipient == self.target:
-                    reply += _(TX, 'paid_recap_item').format(amount=amount)
+                other = UserAccount(JID(payment.otheraccount))
+                if other == self.target:
+                    reply += _(TX, 'history_recap_item').format(amount=amount)
                 else:
-                    if user.isAdmin() or (0 != len(recipient.username)):
-                        reply += _(TX, 'paid_recap_item_dest').format(amount=amount, dest=recipient.getLabel())
+                    tofrom = 'to' if amount < 0 else 'from'
+                    if user.isAdmin() or (0 != len(other.username)):
+                        reply += _(TX, 'history_recap_item_%s' % tofrom).format(amount=abs(amount), dest=other.getLabel())
                     else:
-                        reply += _(TX, 'paid_recap_item_dest_unknown').format(amount=amount)
+                        reply += _(TX, 'history_recap_item_%s_unknown' % tofrom).format(amount=abs(amount))
             if payment.message is not None:
                 reply = _(TX, 'tx_comment').format(message=reply, comment=payment.message)
             confirmations = payment.confirmations
@@ -140,14 +137,14 @@ class Command(object):
                 reply = _(TX, 'tx_confirmations').format(message=reply, confirmations=payment.confirmations)
         if 0 == len(reply):
             if self.target is None:
-                reply = _(TX, 'paid_recap_nothing_global')
+                reply = _(TX, 'history_recap_nothing_global')
             else:
-                reply = _(TX, 'paid_recap_nothing_target')
+                reply = _(TX, 'history_recap_nothing_target')
         else:
             if self.target is None:
-                reply = _(TX, 'paid_recap_global').format(summary=reply)
+                reply = _(TX, 'history_recap_global').format(summary=reply)
             else:
-                reply = _(TX, 'paid_recap_target').format(summary=reply)
+                reply = _(TX, 'history_recap_target').format(summary=reply)
         return reply
 
     def _executeCancel(self, user, code=None):
@@ -231,7 +228,7 @@ class Command(object):
         """Called internally. Generate the help message for the given command,
            or the generic help message if no command was given."""
         if command is None:
-            possibleCommands = [_(COMMANDS, 'command_help'), _(COMMANDS, 'command_paid')]
+            possibleCommands = [_(COMMANDS, 'command_help'), _(COMMANDS, 'command_history')]
             if (target is not None) and (target.jid != user.jid):
                 possibleCommands.extend([_(COMMANDS, 'command_pay'), _(COMMANDS, 'command_confirm'), _(COMMANDS, 'command_cancel')])
             elif (target is None):

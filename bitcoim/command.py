@@ -110,8 +110,7 @@ class Command(object):
         return reply
 
     def _executeHistory(self, user):
-        """Called internally. List the past transactions related to the user.
-           The command behaves the same whatever the target (for now)."""
+        """Called internally. List the past transactions related to the user."""
         reply = ''
         for payment in user.pastPayments():
             if self.target is not None and (self.target.jid != payment.otheraccount):

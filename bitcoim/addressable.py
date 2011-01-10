@@ -29,10 +29,9 @@ def generate(jid, components, requester):
     except InvalidBitcoinAddressError:
         try:
             jidprefix = JIDDecode(jid.getNode())
-            if (requester.isAdmin() or (jidprefix == requester.jid)) \
-               and (0 <= jidprefix.find('.')):
-                # Treat as JID, and must be registered
-                return UserAccount(JID(jidprefix), True)
+            if 0 <= jidprefix.find('.'):
+                # Treat as JID
+                return UserAccount(JID(jidprefix))
             else:
                 # Treat as username
                 return UserAccount(jidprefix)

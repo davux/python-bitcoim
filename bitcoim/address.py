@@ -99,7 +99,7 @@ class Address(Addressable, BCAddress):
             query.addChild('FN', payload=[self.address])
             #TODO: More generic URL generation
             query.addChild('URL', payload=[_(DEFAULT, 'url_bitcoin_address').format(address=self.address)])
-            pic = self.qrCode(level='H', formt='PNG', asURI=False)
+            pic = self.qrCode(level='H', formt='PNG')
             if pic is not None:
                 photo = query.addChild('PHOTO')
                 photo.addChild('TYPE', payload='image/png')

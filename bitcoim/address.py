@@ -99,7 +99,7 @@ class Address(Addressable, BCAddress):
             query.addChild('FN', payload=[self.address])
             #TODO: More generic URL generation
             query.addChild('URL', payload=[_(DEFAULT, 'url_bitcoin_address').format(address=self.address)])
-            pic = self.pngPhoto()
+            pic = self.qrCode(level='H', formt='PNG', asURI=False)
             if pic is not None:
                 photo = query.addChild('PHOTO')
                 photo.addChild('TYPE', payload='image/png')
@@ -108,22 +108,6 @@ class Address(Addressable, BCAddress):
             cnx.send(reply)
             raise NodeProcessed
         Addressable.iqReceived(self, cnx, iq)
-
-    def pngPhoto(self, size=80):
-        '''Return a string with the content of a PNG photo representing the
-           address. This method needs the qrencode module, if it can't be found
-           then the method returns None.'''
-        try:
-            from qrencode import encode_scaled, QR_ECLEVEL_H
-        except ImportError:
-            return None
-        from StringIO import StringIO
-        buf = StringIO()
-        im = encode_scaled(self.address, size, level=QR_ECLEVEL_H)[2].convert('RGB')
-        im.save(buf, 'PNG')
-        p = buf.getvalue()
-        buf.close()
-        return p
 
     def messageReceived(self, cnx, msg):
         from command import parse as parseCommand, Command

@@ -192,6 +192,8 @@ class Component(Addressable, XMPPComponent):
                       body=_(ROSTER, 'address_start_chat').format(address=address), typ='chat')
             except InvalidBitcoinAddressError:
                 (action, args) = parseCommand(msg.getBody())
+                if action is None:
+                    return
                 msg = msg.buildReply(Command(action, args).execute(user))
                 msg.setType('chat')
                 if user.checkBalance() is not None:

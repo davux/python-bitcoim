@@ -20,7 +20,7 @@ def parse(line):
        If the line is empty, None is returned.'''
     parts = line.split(None, 1)
     if 0 == len(parts):
-        return None
+        return (None, [])
     action = parts.pop(0)
     try:
         arguments = parts[0].split()

@@ -111,7 +111,7 @@ class Component(Addressable, XMPPComponent):
                 error = reason
             msg = msg.buildReply(_(COMMANDS, 'error_message').format(\
                                    message=error))
-            msg.setType('error')
+            msg.setType('chat')
             cnx.send(msg)
             raise NodeProcessed
         # otherwise the default handler will send a "not supported" error

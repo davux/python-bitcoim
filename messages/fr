@@ -29,8 +29,7 @@ command_list_prompt = Commandes possibles: {lst}. Tapez "%(command_help)s <comma
 command_list_prompt_address = Vous pouvez aussi taper directement une adresse Bitcoin pour commencer à intéragir avec elle.
 
 [Roster interaction]
-hello_nick = Bonjour {nick} !
-current_balance = Solde actuel: %(bitcoins)s
+current_balance = Bonjour {nick} ! Solde actuel: %(bitcoins)s
 new_address_message = Bonjour ! Je suis votre nouvelle adresse Bitcoin.
 address_start_chat = Je suis {address}. Parlez-moi...
 address2jid_description = Veuillez ajouter le contact Bitcoin que vous voulez ajouter.
@@ -68,13 +67,10 @@ error_payment_to_gateway = Vous pouvez uniquement envoyer des bitcoins aux autre
 error_payment_to_nobody = Il faut indiquer un destinataire du paiement, ou bien un code de confirmation en attente.
 error_payment_to_self = Ce n'est pas très logique, je suis votre propre adresse...
 error_tx_not_found = Il n'y a aucun paiement en attente avec le code "{code}"
-error_user_refuses_payments = Cet utilisateur n'accepte pas les paiements directs.
 warning_low_balance = Attention : pour l'instant, il ne vous reste que %(bitcoins)s sur votre compte.
 history_recap_item = %(bitcoins)s
 history_recap_item_to = %(bitcoins)s à {dest}
 history_recap_item_from = %(bitcoins)s par {dest}
-history_recap_item_to_unknown = %(bitcoins)s à un autre utilisateur qui est, depuis, invisible
-history_recap_item_from_unknown = %(bitcoins)s d'un autre utilisateur qui est, depuis, invisible
 tx_comment = {message} ({comment})
 tx_confirmations = {message} – {confirmations} confirmations
 history_recap_nothing_global = Vous n'avez rien envoyé ni reçu

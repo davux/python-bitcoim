@@ -22,8 +22,6 @@ class PaymentOrder(object):
         elif isinstance(target, UserAccount):
             if sender == target:
                 raise PaymentToSelfError
-            if 0 == len(target.username):
-                raise InvalidPaymentError, _(TX, 'error_user_refuses_payments')
             self.recipient = target.username
         else:
             self.recipient = None

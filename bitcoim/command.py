@@ -142,10 +142,7 @@ class Command(object):
                     reply += _(TX, 'history_recap_item').format(amount=amount)
                 else:
                     tofrom = 'to' if amount < 0 else 'from'
-                    if user.isAdmin() or (0 != len(other.username)):
-                        reply += _(TX, 'history_recap_item_%s' % tofrom).format(amount=abs(amount), dest=other.getLabel())
-                    else:
-                        reply += _(TX, 'history_recap_item_%s_unknown' % tofrom).format(amount=abs(amount))
+                    reply += _(TX, 'history_recap_item_%s' % tofrom).format(amount=abs(amount), dest=other.username)
             if payment.message is not None:
                 reply = _(TX, 'tx_comment').format(message=reply, comment=payment.message)
             confirmations = payment.confirmations

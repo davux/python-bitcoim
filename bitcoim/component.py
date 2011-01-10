@@ -74,8 +74,8 @@ class Component(Addressable, XMPPComponent):
            gateway, including the gateway itself. Calls discoReceived() on the
            user, the address or the gateway depending on the recipient.
            A note about querying users: You should normally query a user by
-           their username, provided they set one. If you're an admin, you can
-           additionally query them from their real JID, in any case.
+           their username. If you're an admin, you can additionally query them
+           from their real JID, in any case.
         '''
         fromUser = UserAccount(iq.getFrom())
         target = generateAddressable(iq.getTo(), [self], fromUser)
@@ -142,12 +142,7 @@ class Component(Addressable, XMPPComponent):
         '''Send a presence information to the user, from the component.'''
         if not user.isRegistered():
             return
-        username = user.username
-        if 0 == len(username):
-            status = ''
-        else:
-            status = _(ROSTER, 'hello_nick').format(nick=username) + ' '
-        status += _(ROSTER, 'current_balance').format(amount=user.getBalance())
+        status = _(ROSTER, 'current_balance').format(nick=user.username, amount=user.getBalance())
         self.send(Presence(to=user.jid, typ='available', show='online', status=status, frm=self.jid))
 
     def addAddressToRoster(self, address, user):
@@ -181,10 +176,7 @@ class Component(Addressable, XMPPComponent):
                 elif 'users' == node:
                     for jid in UserAccount.getAllContacts():
                         contact = UserAccount(JID(jid))
-                        if 0 == len(contact.username):
-                            name = contact.jid
-                        else:
-                            name = contact.username
+                        name = contact.username
                         items.append({'jid': contact.getLocalJID(), 'name': name})
             return items
 

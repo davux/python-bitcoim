@@ -31,8 +31,7 @@ command_list_prompt = Possible commands: {lst}. Type '%(command_help)s <command>
 command_list_prompt_address = You can also type a bitcoin address directly to start a chat.
 
 [Roster interaction]
-hello_nick = Hi {nick}!
-current_balance = Current balance: %(bitcoins)s
+current_balance = Hi {nick}! Current balance: %(bitcoins)s
 new_address_message = Hi! I'm your new Bitcoin address.
 address_start_chat = I'm {address}. Talk to me.
 address2jid_description = Please enter the Bitcoin contact you would like to add.
@@ -70,13 +69,10 @@ error_payment_to_gateway = You can only send coins to a user or an address
 error_payment_to_nobody = A recipient or an existing payment code must be given
 error_payment_to_self = You know, I'm your own address. It doesn't make sense.
 error_tx_not_found = No payment was found with code '{code}'
-error_user_refuses_payments = This user doesn't accept direct payments.
 warning_low_balance = Warning: you only have {amount} left on your account right now.
 history_recap_item = %(bitcoins)s
 history_recap_item_to = %(bitcoins)s to {dest}
 history_recap_item_from = %(bitcoins)s from {dest}
-history_recap_item_to_unknown = %(bitcoins)s to another user who became invisible since then
-history_recap_item_from_unknown = %(bitcoins)s from another user who became invisible since then
 tx_comment = {message} ({comment})
 tx_confirmations = {message} – {confirmations} confirmations
 history_recap_nothing_global = You didn't send or receive any coins

@@ -57,8 +57,7 @@ class UserAccount(Addressable):
             cls.cacheByJID[jid]._isAdmin = False
             if username is None:
                 username = cls.cacheByJID[jid]._updateUsername()
-            if 0 != len(username):
-                cls.cacheByUsername[username] = cls.cacheByJID[jid]
+            cls.cacheByUsername[username] = cls.cacheByJID[jid]
         if mustBeRegistered and not cls.cacheByJID[jid].isRegistered():
             raise UnknownUserError
         return cls.cacheByJID[jid]
@@ -96,25 +95,12 @@ class UserAccount(Addressable):
             object.__setattr__(self, 'username', res[0])
             return res[0]
 
-    def getLabel(self):
-        '''A label when you absolutely need to name a user. selects the
-           username if it exists, or fallback to the local JID.
-           Warning: Since this disloses the user's real JID, only show it to
-                    authorized people.
-        '''
-        if 0 != len(self.username):
-            return self.username
-        else:
-            return self.jid
-
     def getLocalJID(self):
         '''Return the "local" (hosted at the gateway) JID of the user. The node
-           of the JID is either the username or the real JID of the user,
-           encoded according to XEP-0106 so that it can be used as a JID node.
-           Warning: Since this disloses the user's real JID, only show it to
-                    authorized people.
+           of the JID is the username, encoded according to XEP-0106 so that it
+           can be used as a JID node.
         '''
-        return JID(node=JIDEncode(self.getLabel()))
+        return JID(node=JIDEncode(self.username))
 
     @staticmethod
     def getAllContacts():
@@ -152,8 +138,7 @@ class UserAccount(Addressable):
         return SQL().fetchone() is not None
 
     def register(self):
-        '''Add given JID to subscribers if possible. Raise exception otherwise.
-           If the UserAccount object already has a username, insert it.'''
+        '''Add given JID to subscribers if possible. Raise exception otherwise.'''
         #TODO: Simply create an address for them
         if self.isRegistered():
             raise AlreadyRegisteredError
@@ -290,7 +275,7 @@ class UserAccount(Addressable):
                 label_addresses = _(DISCO, 'other_s_addresses')
             if 'info' == what:
                 if node is None:
-                    ids = [{'category': 'account', 'type': 'registered', 'name': self.getLabel()}]
+                    ids = [{'category': 'account', 'type': 'registered', 'name': self.username}]
                     return {'ids': ids, 'features': [NS_DISCO_INFO, NS_DISCO_ITEMS, NS_VCARD, NS_VERSION]}
                 elif 'addresses' == node:
                     ids = [{'category': 'hierarchy', 'type': 'branch', 'name': label_addresses}]
@@ -317,8 +302,7 @@ class UserAccount(Addressable):
             query = reply.getQuery()
             if requester == self or requester.isAdmin():
                 query.addChild('FN', payload=[self.jid])
-            if 0 != len(self.username):
-                query.addChild('NICKNAME', payload=[self.username])
+            query.addChild('NICKNAME', payload=[self.username])
             cnx.send(reply)
             raise NodeProcessed
         Addressable.iqReceived(self, cnx, iq)
@@ -350,8 +334,7 @@ class UserAccount(Addressable):
 
     def sendBitcoinPresence(self, cnx, user, fromUsername=True):
         '''Send a presence information to 'user', from us.
-           If fromUsername is True and we have a username, use
-           username@gateway.tld as a "from" field.
+           If fromUsername is True, use username@gateway.tld as a "from" field.
            If fromUsername is False and the recipient is an admin, use the
            "hosted" form of their real JID.
            Otherwise, don't send anything.
@@ -362,13 +345,13 @@ class UserAccount(Addressable):
             status = _(ROSTER, 'current_balance').format(amount=self.getBalance())
         else:
             status = None
-        if fromUsername and (len(self.username) != 0):
+        if fromUsername:
             node = self.username
-        elif (not fromUsername) and user.isAdmin():
+        elif user.isAdmin():
             node = self.jid
         else:
-            warning("Possible programming error: Trying to send %s's bitcoin presence. As a username? %s. Has one? %s. To an admin? %s" \
-                    % (self, fromUsername, self.username, user.isAdmin()))
+            warning("Possible programming error: Trying to send %s's bitcoin presence. As a username? %s. To an admin? %s" \
+                    % (self, fromUsername, user.isAdmin()))
             return False
         cnx.send(Presence(to=user.jid, typ='available', show='online', \
                           status=status, frm=JID(node=JIDEncode(node))))

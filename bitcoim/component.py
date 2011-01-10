@@ -338,10 +338,10 @@ class Component(Addressable, XMPPComponent):
 
     def registrationRequested(self, iq):
         '''A registration request was received. If an invalid username is
-           choosen, the whole registration fails (people don't have to pick
-           one, though). Also, although it's normally impossible, we're being
-           paranoid and forbid registrations from JIDs that don't contain a
-           dot, since they might conflict with usernames.'''
+           choosen, the whole registration fails. Also, although it's normally
+           impossible, we're being paranoid and forbid registrations from JIDs
+           that don't contain a dot, since they might conflict with usernames.
+        '''
         frm = iq.getFrom()
         info("Registration request from %s" % frm)
         if -1 == frm.getStripped().find('.'):

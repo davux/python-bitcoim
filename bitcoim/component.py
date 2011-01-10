@@ -117,12 +117,8 @@ class Component(Addressable, XMPPComponent):
         # otherwise the default handler will send a "not supported" error
 
     def presenceHandler(self, cnx, prs):
-        '''Presence received. If any presence stanza is received from an
-           unregistered user, don't even look at it. They should register
-           first.'''
+        '''Presence received.'''
         fromUser = UserAccount(prs.getFrom())
-        if not fromUser.isRegistered():
-            return #TODO: Send a registration-required error
         target = generateAddressable(prs.getTo(), [self], fromUser)
         if target is not None:
             return target.presenceReceived(cnx, prs)
@@ -206,9 +202,13 @@ class Component(Addressable, XMPPComponent):
         raise NodeProcessed
 
     def presenceReceived(self, cnx, prs):
-        '''Presence received from a registered user'''
+        '''Presence received from a registered user. If any presence stanza is
+           received from an unregistered user, don't even look at it. They
+           should register first.'''
         frm = prs.getFrom()
         user = UserAccount(frm)
+        if not user.isRegistered():
+            return #TODO: Send a registration-required error
         resource = frm.getResource()
         to = prs.getTo().getStripped()
         typ = prs.getType()

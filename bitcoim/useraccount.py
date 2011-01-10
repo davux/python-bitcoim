@@ -127,11 +127,14 @@ class UserAccount(Addressable):
     def canUseUsername(self, username):
         '''Is that username available to this user? For the moment, everything
            is valid except:
+             - empty usernames
              - usernames already in use by anyone but the user
              - valid bitcoin addresses
              - usernames containing a dot, so that the local JID can't conflict
                with that of a user without a username.
         '''
+        if 0 == len(username):
+            return False
         if Controller().validateaddress(username)['isvalid']:
             return False
         if username.find('.') >= 0:

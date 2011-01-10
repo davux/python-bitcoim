@@ -46,6 +46,7 @@ announce_disconnect = Service is shutting down. See you later.
 [Registration]
 error_invalid_jid = Your JID must contain a dot. That's the rule.
 error_invalid_username = This username is invalid or not available.
+error_missing_username = You must choose a username.
 error_not_registered = You're not registered. Please do, it's free!
 set_username = You may set/change your username if you wish.
 introduction = After registration, you'll get a Bitcoin address that you can use to send and receive payments via Bitcoin.

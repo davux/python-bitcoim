@@ -367,8 +367,12 @@ class Component(Addressable, XMPPComponent):
             user.username = requestedUsername
             info("%s changed username to '%s'" % (user, user.username))
         except UsernameNotAvailableError:
+            if 0 == len(requestedUsername):
+                msg = 'error_missing_username'
+            else:
+                msg = 'error_invalid_username'
             reply = iq.buildReply(typ='error')
-            reply.addChild(node=ErrorNode('not-acceptable', 406, 'modify', _(REGISTRATION, 'error_invalid_username')))
+            reply.addChild(node=ErrorNode('not-acceptable', 406, 'modify', _(REGISTRATION, msg)))
             self.send(reply)
             return
         try:

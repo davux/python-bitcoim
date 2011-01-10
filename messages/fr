@@ -44,6 +44,7 @@ announce_disconnect = Nous coupons le service. À plus tard.
 [Registration]
 error_invalid_jid = Votre JID doit contenir au moins un point. C'est comme ça !
 error_invalid_username = Ce nom d'utilisateur est invalide, ou déjà pris.
+error_missing_username = Vous devez choisir un nom d'utilisateur.
 error_not_registered = Vous devez vous inscrire. N'hésitez pas, c'est gratuit !
 set_username = Vous pouvez définir ou changer votre nom d'utilisateur si vous voulez.
 introduction = En vous inscrivant, vous aurez une adresse Bitcoin que vous pourrez utiliser pour envoyer et recevoir des bitcoins.

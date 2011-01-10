@@ -11,7 +11,7 @@ from jid import JID
 from logging import debug, info, error, warning
 from xmpp.jep0106 import JIDEncode, JIDDecode
 from xmpp.protocol import Presence, NodeProcessed, NS_VCARD, NS_VERSION, \
-                          NS_DISCO_INFO, NS_DISCO_ITEMS
+                          NS_DISCO_INFO, NS_DISCO_ITEMS, JID as XJID
 
 FIELD_ID = 'id'
 FIELD_JID = 'registered_jid'
@@ -35,7 +35,10 @@ class UserAccount(Addressable):
            username is not found, or if an unregistered JID was given and
            mustBeRegistered is True.
         '''
-        if 'JID' != name.__class__.__name__:
+        if isinstance(name, XJID):
+            username = None
+            jid = name.getStripped()
+        else:
             if name in cls.cacheByUsername:
                 return cls.cacheByUsername[name]
             req = "select %s from %s where %s=?" % (FIELD_JID, TABLE_REG, FIELD_USERNAME)
@@ -46,9 +49,6 @@ class UserAccount(Addressable):
             else:
                 username = name
                 jid = res[0]
-        else:
-            username = None
-            jid = name.getStripped()
         if jid not in cls.cacheByJID:
             cls.cacheByJID[jid] = object.__new__(cls)
             cls.cacheByJID[jid].jid = jid

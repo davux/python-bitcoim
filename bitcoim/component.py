@@ -8,7 +8,7 @@ from bitcoin.address import InvalidBitcoinAddressError
 from bitcoin.controller import Controller
 from command import Command, parse as parseCommand, CommandError, \
                     CommandSyntaxError, CommandTargetError, \
-                    UnknownCommandError
+                    AmbiguousCommandError, UnknownCommandError
 from datetime import datetime
 from i18n import _, COMMANDS, DISCO, REGISTRATION, ROSTER
 from jid import JID
@@ -100,6 +100,9 @@ class Component(Addressable, XMPPComponent):
                 return target.messageReceived(cnx, msg)
             except CommandTargetError, reason:
                 error = reason
+            except AmbiguousCommandError, e:
+                args = list(e.args)
+                error = _(COMMANDS, 'ambiguous_command').format(command=args.pop(0), matches=', '.join(args[0]))
             except UnknownCommandError, command:
                 error = (_(COMMANDS, 'unknown_command').format(command=command))
             except CommandSyntaxError, reason:

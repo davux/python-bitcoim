@@ -48,9 +48,26 @@ class Command(object):
                 return _(COMMANDS, 'command_'+action+'_usage')
         raise UnknownCommandError, self.action
 
+    def expandAction(self):
+        '''Try to guess the action from its first letters. If a match is found,
+           replace self.action. Raise AmbiguousCommandError if more than one
+           match is found. If there's no match, don't change anything.'''
+        matches = []
+        for a in ['pay', 'history', 'cancel', 'confirm', 'help']:
+            command = _(COMMANDS, 'command_'+a)
+            if 0 == command.find(self.action):
+                matches.append(command)
+        if 0 == len(matches):
+            return
+        if 1 == len(matches):
+            self.action = matches[0]
+            return
+        raise AmbiguousCommandError(self.action, matches)
+
     def execute(self, user):
         """Actually execute the command, on behalf of the given user."""
         debug("A command was sent: %s" % self.action)
+        self.expandAction()
         if _(COMMANDS, 'command_pay') == self.action:
             if self.target is None:
                 raise CommandTargetError, _(TX, 'error_payment_to_gateway')
@@ -255,3 +272,6 @@ class UnknownCommandError(CommandSyntaxError):
 class CommandTargetError(CommandError):
     '''The target of the command is wrong (address instead of gateway or
        viceversa).'''
+
+class AmbiguousCommandError(CommandSyntaxError):
+    '''The given command doesn't expand to a regular command'''

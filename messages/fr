@@ -22,6 +22,7 @@ command_pay_usage = payer <montant> [<raison>]
     - <raison> est un texte libre
 confirm_prompt = Veuillez confirmer en tapant: "%(command_confirm)s {code}".
 unknown_command = Commande inconnue "{command}". Tapez "%(command_help)s" pour la liste des commandes.
+ambiguous_command = Commande "{command}" ambigüe. Ça pourrait être {matches}.
 error_message = Erreur: {message}
 usage_message = Syntaxe: {usage}
 command_list_prompt = Commandes possibles: {lst}. Tapez "%(command_help)s <commande>" pour avoir des détails.

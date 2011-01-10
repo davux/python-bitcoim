@@ -24,6 +24,7 @@ command_pay_usage = pay <amount> [<reason>]
     - <reason> is a free-form text
 confirm_prompt = Please confirm by typing: '%(command_confirm)s {code}'.
 unknown_command = Unknown command {command}. Type '%(command_help)s' for a list of accepted commands.
+ambiguous_command = Ambiguous command '{command}'. It could mean {matches}.
 error_message = Error: {message}
 usage_message = Usage: {usage}
 command_list_prompt = Possible commands: {lst}. Type '%(command_help)s <command>' for details.

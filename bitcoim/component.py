@@ -51,7 +51,7 @@ class Component(Addressable, XMPPComponent):
             raise Exception(_('Console', 'cannot_auth').format(jid=self.jid))
         self._RegisterHandlers()
         debug("Sending initial presence to all contacts...")
-        for jid in UserAccount.getAllContacts():
+        for jid in UserAccount.getAllMembers():
             self.send(Presence(to=jid, frm=self.jid, typ='probe'))
             user = UserAccount(JID(jid))
             self.sendBitcoinPresence(self, user)
@@ -170,10 +170,10 @@ class Component(Addressable, XMPPComponent):
                 if node is None:
                     items.append({'jid': self.jid, 'name': 'Users', 'node': 'users'})
                 elif 'users' == node:
-                    for jid in UserAccount.getAllContacts():
-                        contact = UserAccount(JID(jid))
-                        name = contact.username
-                        items.append({'jid': contact.getLocalJID(), 'name': name})
+                    for jid in UserAccount.getAllMembers():
+                        member = UserAccount(JID(jid))
+                        name = member.username
+                        items.append({'jid': member.getLocalJID(), 'name': name})
             return items
 
     def messageReceived(self, cnx, msg):

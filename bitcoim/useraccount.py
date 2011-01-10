@@ -100,7 +100,7 @@ class UserAccount(Addressable):
         return JID(node=JIDEncode(self.username))
 
     @staticmethod
-    def getAllContacts():
+    def getAllMembers():
         '''Return the list of all JIDs that are registered on the component.'''
         req = "select %s from %s" % (FIELD_JID, TABLE_REG)
         SQL().execute(req)
